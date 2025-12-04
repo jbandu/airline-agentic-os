@@ -2,15 +2,6 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "npm run backend"
+startCommand = "npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
-
-[[deploy.services]]
-name = "backend"
-startCommand = "npm run start -w backend"
-
-[[deploy.services]]
-name = "frontend"
-startCommand = "npm run preview -w frontend"
-buildCommand = "npm run build -w frontend"
