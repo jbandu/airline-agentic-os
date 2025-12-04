@@ -24,10 +24,10 @@ router.get('/bridges', async (req, res) => {
         },
       },
     });
-    res.json(bridges);
+    res.json({ success: true, data: bridges });
   } catch (error) {
     console.error('Error fetching cross-domain bridges:', error);
-    res.status(500).json({ error: 'Failed to fetch cross-domain bridges' });
+    res.status(500).json({ success: false, error: 'Failed to fetch cross-domain bridges' });
   }
 });
 
@@ -53,13 +53,13 @@ router.get('/bridges/:id', async (req, res) => {
     });
 
     if (!bridge) {
-      return res.status(404).json({ error: 'Bridge not found' });
+      return res.status(404).json({ success: false, error: 'Bridge not found' });
     }
 
-    res.json(bridge);
+    res.json({ success: true, data: bridge });
   } catch (error) {
     console.error('Error fetching bridge:', error);
-    res.status(500).json({ error: 'Failed to fetch bridge' });
+    res.status(500).json({ success: false, error: 'Failed to fetch bridge' });
   }
 });
 
@@ -145,10 +145,10 @@ router.get('/mcp-dependencies', async (req, res) => {
         },
       },
     });
-    res.json(dependencies);
+    res.json({ success: true, data: dependencies });
   } catch (error) {
     console.error('Error fetching MCP dependencies:', error);
-    res.status(500).json({ error: 'Failed to fetch MCP dependencies' });
+    res.status(500).json({ success: false, error: 'Failed to fetch MCP dependencies' });
   }
 });
 
@@ -182,13 +182,13 @@ router.get('/mcp-dependencies/:id', async (req, res) => {
     });
 
     if (!dependency) {
-      return res.status(404).json({ error: 'MCP dependency not found' });
+      return res.status(404).json({ success: false, error: 'MCP dependency not found' });
     }
 
-    res.json(dependency);
+    res.json({ success: true, data: dependency });
   } catch (error) {
     console.error('Error fetching MCP dependency:', error);
-    res.status(500).json({ error: 'Failed to fetch MCP dependency' });
+    res.status(500).json({ success: false, error: 'Failed to fetch MCP dependency' });
   }
 });
 

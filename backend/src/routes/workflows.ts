@@ -32,10 +32,10 @@ router.get('/', async (req, res) => {
       },
       orderBy: (workflows, { asc }) => [asc(workflows.name)],
     });
-    res.json(allWorkflows);
+    res.json({ success: true, data: allWorkflows });
   } catch (error) {
     console.error('Error fetching workflows:', error);
-    res.status(500).json({ error: 'Failed to fetch workflows' });
+    res.status(500).json({ success: false, error: 'Failed to fetch workflows' });
   }
 });
 
@@ -73,13 +73,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!workflow) {
-      return res.status(404).json({ error: 'Workflow not found' });
+      return res.status(404).json({ success: false, error: 'Workflow not found' });
     }
 
-    res.json(workflow);
+    res.json({ success: true, data: workflow });
   } catch (error) {
     console.error('Error fetching workflow:', error);
-    res.status(500).json({ error: 'Failed to fetch workflow' });
+    res.status(500).json({ success: false, error: 'Failed to fetch workflow' });
   }
 });
 

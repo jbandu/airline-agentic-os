@@ -27,6 +27,11 @@ export const certificationTypeEnum = pgEnum('certification_type', ['security', '
 export const certificationStatusEnum = pgEnum('certification_status', ['pending', 'in_progress', 'certified', 'expired', 'revoked', 'renewed']);
 export const certificationActionEnum = pgEnum('certification_action', ['created', 'updated', 'status_changed', 'renewed', 'revoked', 'expired']);
 
+// Phase 6C Wave 2: External Systems
+export const externalSystemTypeEnum = pgEnum('external_system_type', ['vendor', 'internal_legacy', 'government', 'partner']);
+export const externalSystemStatusEnum = pgEnum('external_system_status', ['active', 'planned', 'deprecated', 'replaced']);
+export const stubStatusEnum = pgEnum('stub_status', ['draft', 'ready', 'tested', 'deployed']);
+
 // 1. Domains
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -709,5 +714,64 @@ export const certificationHistoryRelations = relations(certificationHistory, ({ 
   certification: one(certifications, {
     fields: [certificationHistory.certificationId],
     references: [certifications.id],
+  }),
+}));
+
+// Phase 6C Wave 2: External Systems
+export const externalSystems = pgTable('external_systems', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  vendor: text('vendor'),
+  systemType: externalSystemTypeEnum('system_type').notNull(),
+  status: externalSystemStatusEnum('status').notNull().default('planned'),
+  version: text('version'),
+  description: text('description'),
+  apiDocumentation: text('api_documentation'),
+  contactInfo: jsonb('contact_info'),
+  integrationRequirements: jsonb('integration_requirements'),
+  dataContract: jsonb('data_contract'),
+  slaRequirements: jsonb('sla_requirements'),
+  costPerCall: text('cost_per_call'),
+  notes: text('notes'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  nameIdx: index('ext_systems_name_idx').on(table.name),
+  typeIdx: index('ext_systems_type_idx').on(table.systemType),
+  statusIdx: index('ext_systems_status_idx').on(table.status),
+}));
+
+export const systemStubs = pgTable('system_stubs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  externalSystemId: uuid('external_system_id').notNull().references(() => externalSystems.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  status: stubStatusEnum('status').notNull().default('draft'),
+  description: text('description'),
+  stubType: text('stub_type').notNull(), // 'rest_api', 'soap', 'file', 'database', 'message_queue'
+  endpoint: text('endpoint'),
+  mockData: jsonb('mock_data'),
+  responseExamples: jsonb('response_examples'),
+  latencyMs: integer('latency_ms'),
+  errorScenarios: jsonb('error_scenarios'),
+  testResults: jsonb('test_results'),
+  notes: text('notes'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  systemIdIdx: index('stubs_system_id_idx').on(table.externalSystemId),
+  statusIdx: index('stubs_status_idx').on(table.status),
+  typeIdx: index('stubs_type_idx').on(table.stubType),
+}));
+
+export const externalSystemsRelations = relations(externalSystems, ({ many }) => ({
+  stubs: many(systemStubs),
+}));
+
+export const systemStubsRelations = relations(systemStubs, ({ one }) => ({
+  externalSystem: one(externalSystems, {
+    fields: [systemStubs.externalSystemId],
+    references: [externalSystems.id],
   }),
 }));

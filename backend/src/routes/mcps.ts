@@ -20,10 +20,10 @@ router.get('/', async (req, res) => {
       },
       orderBy: (mcps, { asc }) => [asc(mcps.name)],
     });
-    res.json(allMcps);
+    res.json({ success: true, data: allMcps });
   } catch (error) {
     console.error('Error fetching MCPs:', error);
-    res.status(500).json({ error: 'Failed to fetch MCPs' });
+    res.status(500).json({ success: false, error: 'Failed to fetch MCPs' });
   }
 });
 
@@ -54,13 +54,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!mcp) {
-      return res.status(404).json({ error: 'MCP not found' });
+      return res.status(404).json({ success: false, error: 'MCP not found' });
     }
 
-    res.json(mcp);
+    res.json({ success: true, data: mcp });
   } catch (error) {
     console.error('Error fetching MCP:', error);
-    res.status(500).json({ error: 'Failed to fetch MCP' });
+    res.status(500).json({ success: false, error: 'Failed to fetch MCP' });
   }
 });
 

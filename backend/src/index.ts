@@ -19,6 +19,7 @@ import auditRouter from './routes/audit';
 import personasRouter from './routes/personas';
 import useCasesRouter from './routes/use-cases';
 import certificationsRouter from './routes/certifications';
+import externalSystemsRouter from './routes/external-systems';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -89,6 +90,7 @@ app.use('/api/audit', auditRouter);
 app.use('/api/personas', personasRouter);
 app.use('/api/use-cases', useCasesRouter);
 app.use('/api/certifications', certificationsRouter);
+app.use('/api/external-systems', externalSystemsRouter);
 
 // Root endpoint - API info in development, serve frontend in production
 if (!isProduction) {

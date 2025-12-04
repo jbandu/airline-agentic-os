@@ -112,7 +112,7 @@ export function CertificationStatusIcon({
       ? 'text-red-600'
       : 'text-gray-600';
 
-  return <Icon size={size} className={`${colorClass} ${className}`} title={config.label} />;
+  return <Icon size={size} className={`${colorClass} ${className}`} />;
 }
 
 interface CertificationListProps {

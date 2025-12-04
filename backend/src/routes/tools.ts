@@ -22,10 +22,10 @@ router.get('/', async (req, res) => {
       },
       orderBy: (tools, { asc }) => [asc(tools.name)],
     });
-    res.json(allTools);
+    res.json({ success: true, data: allTools });
   } catch (error) {
     console.error('Error fetching tools:', error);
-    res.status(500).json({ error: 'Failed to fetch tools' });
+    res.status(500).json({ success: false, error: 'Failed to fetch tools' });
   }
 });
 
@@ -49,13 +49,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!tool) {
-      return res.status(404).json({ error: 'Tool not found' });
+      return res.status(404).json({ success: false, error: 'Tool not found' });
     }
 
-    res.json(tool);
+    res.json({ success: true, data: tool });
   } catch (error) {
     console.error('Error fetching tool:', error);
-    res.status(500).json({ error: 'Failed to fetch tool' });
+    res.status(500).json({ success: false, error: 'Failed to fetch tool' });
   }
 });
 

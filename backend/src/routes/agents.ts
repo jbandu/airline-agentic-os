@@ -33,10 +33,10 @@ router.get('/', async (req, res) => {
       },
       orderBy: (agents, { asc }) => [asc(agents.name)],
     });
-    res.json(allAgents);
+    res.json({ success: true, data: allAgents });
   } catch (error) {
     console.error('Error fetching agents:', error);
-    res.status(500).json({ error: 'Failed to fetch agents' });
+    res.status(500).json({ success: false, error: 'Failed to fetch agents' });
   }
 });
 
@@ -84,13 +84,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+      return res.status(404).json({ success: false, error: 'Agent not found' });
     }
 
-    res.json(agent);
+    res.json({ success: true, data: agent });
   } catch (error) {
     console.error('Error fetching agent:', error);
-    res.status(500).json({ error: 'Failed to fetch agent' });
+    res.status(500).json({ success: false, error: 'Failed to fetch agent' });
   }
 });
 
@@ -236,10 +236,10 @@ router.get('/categories/all', async (req, res) => {
       },
       orderBy: (agentCategories, { asc }) => [asc(agentCategories.name)],
     });
-    res.json(categories);
+    res.json({ success: true, data: categories });
   } catch (error) {
     console.error('Error fetching agent categories:', error);
-    res.status(500).json({ error: 'Failed to fetch agent categories' });
+    res.status(500).json({ success: false, error: 'Failed to fetch agent categories' });
   }
 });
 

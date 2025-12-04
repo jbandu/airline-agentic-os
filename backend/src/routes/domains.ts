@@ -14,10 +14,10 @@ router.get('/', async (req, res) => {
       },
       orderBy: (domains, { asc }) => [asc(domains.name)],
     });
-    res.json(allDomains);
+    res.json({ success: true, data: allDomains });
   } catch (error) {
     console.error('Error fetching domains:', error);
-    res.status(500).json({ error: 'Failed to fetch domains' });
+    res.status(500).json({ success: false, error: 'Failed to fetch domains' });
   }
 });
 
@@ -37,13 +37,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!domain) {
-      return res.status(404).json({ error: 'Domain not found' });
+      return res.status(404).json({ success: false, error: 'Domain not found' });
     }
 
-    res.json(domain);
+    res.json({ success: true, data: domain });
   } catch (error) {
     console.error('Error fetching domain:', error);
-    res.status(500).json({ error: 'Failed to fetch domain' });
+    res.status(500).json({ success: false, error: 'Failed to fetch domain' });
   }
 });
 

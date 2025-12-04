@@ -65,10 +65,10 @@ router.get('/', async (req, res) => {
       ],
     });
 
-    res.json(allUseCases);
+    res.json({ success: true, data: allUseCases });
   } catch (error) {
     console.error('Error fetching use cases:', error);
-    res.status(500).json({ error: 'Failed to fetch use cases' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use cases' });
   }
 });
 
@@ -94,13 +94,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!useCase) {
-      return res.status(404).json({ error: 'Use case not found' });
+      return res.status(404).json({ success: false, error: 'Use case not found' });
     }
 
-    res.json(useCase);
+    res.json({ success: true, data: useCase });
   } catch (error) {
     console.error('Error fetching use case:', error);
-    res.status(500).json({ error: 'Failed to fetch use case' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use case' });
   }
 });
 
@@ -340,32 +340,35 @@ router.get('/:id/roi', async (req, res) => {
         : '0';
 
     res.json({
-      useCase: {
-        id: useCase.id,
-        code: useCase.code,
-        name: useCase.name,
+      success: true,
+      data: {
+        useCase: {
+          id: useCase.id,
+          code: useCase.code,
+          name: useCase.name,
+        },
+        currentState: {
+          timePerOccurrenceMinutes: useCase.currentTimeMinutes,
+          successRate: useCase.currentSuccessRate,
+          annualCost: currentAnnualCost,
+        },
+        proposedState: {
+          timePerOccurrenceMinutes: useCase.proposedTimeMinutes,
+          successRate: useCase.proposedSuccessRate,
+          annualCost: proposedAnnualCost,
+        },
+        roi: {
+          annualSavings,
+          annualTimeSavingsHours,
+          successRateImprovement,
+          roiPercentage: `${roiPercentage}%`,
+        },
+        estimatedAnnualOccurrences: useCase.estimatedAnnualOccurrences,
       },
-      currentState: {
-        timePerOccurrenceMinutes: useCase.currentTimeMinutes,
-        successRate: useCase.currentSuccessRate,
-        annualCost: currentAnnualCost,
-      },
-      proposedState: {
-        timePerOccurrenceMinutes: useCase.proposedTimeMinutes,
-        successRate: useCase.proposedSuccessRate,
-        annualCost: proposedAnnualCost,
-      },
-      roi: {
-        annualSavings,
-        annualTimeSavingsHours,
-        successRateImprovement,
-        roiPercentage: `${roiPercentage}%`,
-      },
-      estimatedAnnualOccurrences: useCase.estimatedAnnualOccurrences,
     });
   } catch (error) {
     console.error('Error calculating ROI:', error);
-    res.status(500).json({ error: 'Failed to calculate ROI' });
+    res.status(500).json({ success: false, error: 'Failed to calculate ROI' });
   }
 });
 
@@ -422,39 +425,42 @@ router.get('/:id/automation-analysis', async (req, res) => {
     const annualTimeSavingsHours = (timeSavingsSeconds * annualOccurrences) / 3600;
 
     res.json({
-      useCaseId: useCase.id,
-      useCaseName: useCase.name,
-      analysis: {
-        totalSteps,
-        automatableSteps,
-        automationPercentage: `${automationPercentage}%`,
-        errorProneSteps,
-        errorReductionPercentage: `${errorReductionPercentage}%`,
-        complexityScore,
-        complexityReduction,
+      success: true,
+      data: {
+        useCaseId: useCase.id,
+        useCaseName: useCase.name,
+        analysis: {
+          totalSteps,
+          automatableSteps,
+          automationPercentage: `${automationPercentage}%`,
+          errorProneSteps,
+          errorReductionPercentage: `${errorReductionPercentage}%`,
+          complexityScore,
+          complexityReduction,
+        },
+        timeSavings: {
+          currentTotalSeconds,
+          targetTotalSeconds,
+          savingsSeconds: timeSavingsSeconds,
+          savingsMinutes: (timeSavingsSeconds / 60).toFixed(1),
+          savingsPercentage: `${timeSavingsPercentage}%`,
+          annualTimeSavingsHours: annualTimeSavingsHours.toFixed(1),
+        },
+        stepBreakdown: steps.map((step) => ({
+          stepNumber: step.stepNumber,
+          name: step.name,
+          canAutomate: step.canAutomate,
+          errorProne: step.errorProne,
+          currentDuration: step.currentDurationSeconds,
+          targetDuration: step.targetDurationSeconds,
+          actionType: step.actionType,
+          automationNotes: step.automationNotes,
+        })),
       },
-      timeSavings: {
-        currentTotalSeconds,
-        targetTotalSeconds,
-        savingsSeconds: timeSavingsSeconds,
-        savingsMinutes: (timeSavingsSeconds / 60).toFixed(1),
-        savingsPercentage: `${timeSavingsPercentage}%`,
-        annualTimeSavingsHours: annualTimeSavingsHours.toFixed(1),
-      },
-      stepBreakdown: steps.map((step) => ({
-        stepNumber: step.stepNumber,
-        name: step.name,
-        canAutomate: step.canAutomate,
-        errorProne: step.errorProne,
-        currentDuration: step.currentDurationSeconds,
-        targetDuration: step.targetDurationSeconds,
-        actionType: step.actionType,
-        automationNotes: step.automationNotes,
-      })),
     });
   } catch (error) {
     console.error('Error analyzing automation potential:', error);
-    res.status(500).json({ error: 'Failed to analyze automation potential' });
+    res.status(500).json({ success: false, error: 'Failed to analyze automation potential' });
   }
 });
 
@@ -467,10 +473,10 @@ router.get('/:id/steps', async (req, res) => {
       orderBy: (steps, { asc }) => [asc(steps.stepNumber)],
     });
 
-    res.json(steps);
+    res.json({ success: true, data: steps });
   } catch (error) {
     console.error('Error fetching use case steps:', error);
-    res.status(500).json({ error: 'Failed to fetch use case steps' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use case steps' });
   }
 });
 
@@ -611,10 +617,10 @@ router.get('/:id/workflows', async (req, res) => {
       },
     });
 
-    res.json(links);
+    res.json({ success: true, data: links });
   } catch (error) {
     console.error('Error fetching use case workflows:', error);
-    res.status(500).json({ error: 'Failed to fetch use case workflows' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use case workflows' });
   }
 });
 
@@ -679,10 +685,10 @@ router.get('/:id/agents', async (req, res) => {
       },
     });
 
-    res.json(links);
+    res.json({ success: true, data: links });
   } catch (error) {
     console.error('Error fetching use case agents:', error);
-    res.status(500).json({ error: 'Failed to fetch use case agents' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use case agents' });
   }
 });
 
@@ -746,10 +752,10 @@ router.get('/:id/tools', async (req, res) => {
       },
     });
 
-    res.json(links);
+    res.json({ success: true, data: links });
   } catch (error) {
     console.error('Error fetching use case tools:', error);
-    res.status(500).json({ error: 'Failed to fetch use case tools' });
+    res.status(500).json({ success: false, error: 'Failed to fetch use case tools' });
   }
 });
 

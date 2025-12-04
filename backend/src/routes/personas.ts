@@ -32,10 +32,10 @@ router.get('/', async (req, res) => {
       );
     }
 
-    res.json(filteredPersonas);
+    res.json({ success: true, data: filteredPersonas });
   } catch (error) {
     console.error('Error fetching personas:', error);
-    res.status(500).json({ error: 'Failed to fetch personas' });
+    res.status(500).json({ success: false, error: 'Failed to fetch personas' });
   }
 });
 
@@ -66,13 +66,13 @@ router.get('/:id', async (req, res) => {
     });
 
     if (!persona) {
-      return res.status(404).json({ error: 'Persona not found' });
+      return res.status(404).json({ success: false, error: 'Persona not found' });
     }
 
-    res.json(persona);
+    res.json({ success: true, data: persona });
   } catch (error) {
     console.error('Error fetching persona:', error);
-    res.status(500).json({ error: 'Failed to fetch persona' });
+    res.status(500).json({ success: false, error: 'Failed to fetch persona' });
   }
 });
 
@@ -231,10 +231,10 @@ router.get('/:id/day-in-life', async (req, res) => {
       orderBy: (dayInLife, { asc }) => [asc(dayInLife.shiftType)],
     });
 
-    res.json(dayInLifeDocs);
+    res.json({ success: true, data: dayInLifeDocs });
   } catch (error) {
     console.error('Error fetching day-in-life docs:', error);
-    res.status(500).json({ error: 'Failed to fetch day-in-life docs' });
+    res.status(500).json({ success: false, error: 'Failed to fetch day-in-life docs' });
   }
 });
 
