@@ -5,7 +5,9 @@
 ✅ Build succeeds
 ✅ Health check passes
 ✅ App is deployed and running
-⚠️  **No data showing** - database not configured
+✅ Database connected and seeded
+✅ Frontend API configuration fixed
+⚠️  **Action Required**: Remove invalid Neo4j environment variables (see below)
 
 ## Why No Data is Showing
 
@@ -69,6 +71,28 @@ Then use the UI to create domains, MCPs, etc.
 
 ## Troubleshooting
 
+### ⚠️ IMPORTANT: Remove Invalid Neo4j Variables
+
+If you see Neo4j connection errors in Railway logs like:
+```
+Could not perform discovery. No routing servers available.
+getaddrinfo ENOTFOUND 9a541f3d.databases.neo4j.io
+```
+
+**Problem**: Railway has invalid NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD variables set
+**Solution**: Manually remove these from Railway dashboard:
+
+1. Go to Railway dashboard → Your project
+2. Click on your service (the deployed app)
+3. Go to the **Variables** tab
+4. Delete these variables:
+   - `NEO4J_URI`
+   - `NEO4J_USER`
+   - `NEO4J_PASSWORD`
+5. Railway will automatically redeploy
+
+**Why**: The app works fine without Neo4j (it's optional). Invalid credentials cause error spam in logs. Remove them to clean up logs, or set valid Neo4j credentials if you want graph features.
+
 ### "Database not configured" in health check
 **Problem**: `DATABASE_URL` not set
 **Solution**: Add PostgreSQL database in Railway
@@ -76,6 +100,10 @@ Then use the UI to create domains, MCPs, etc.
 ### API returns empty arrays `[]`
 **Problem**: Database connected but no data
 **Solution**: Run `npm run db:seed -w backend` with DATABASE_URL
+
+### Frontend shows "No data available"
+**Problem**: Frontend was calling localhost instead of Railway backend
+**Solution**: Fixed in commit 43475eb - rebuild and redeploy will fix this
 
 ### App crashes: "DATABASE_URL environment variable is not set"
 **Problem**: PostgreSQL not added to Railway project
