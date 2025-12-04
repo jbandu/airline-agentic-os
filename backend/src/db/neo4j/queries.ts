@@ -2,6 +2,46 @@ import { getNeo4jSession } from './connection';
 import { Session } from 'neo4j-driver';
 
 // ============================================
+// HELPER: SAFE NEO4J EXECUTION
+// ============================================
+
+/**
+ * Wrapper to handle Neo4j unavailability gracefully
+ * Returns provided default value if Neo4j is not configured or fails
+ */
+async function safeNeo4jQuery<T>(
+  queryFn: (session: Session) => Promise<T>,
+  defaultValue: T,
+  errorMessage: string = 'Neo4j query failed'
+): Promise<T> {
+  let session: Session | null = null;
+  try {
+    session = await getNeo4jSession();
+    const result = await queryFn(session);
+    await session.close();
+    return result;
+  } catch (error: any) {
+    if (session) {
+      try {
+        await session.close();
+      } catch (closeError) {
+        // Ignore close errors
+      }
+    }
+
+    // Check if this is a "Neo4j not configured" error
+    if (error.message?.includes('Neo4j is not')) {
+      console.warn(`⚠️  ${errorMessage}: Neo4j not configured, returning empty result`);
+      return defaultValue;
+    }
+
+    // Log other errors but still return default value
+    console.error(`${errorMessage}:`, error.message);
+    return defaultValue;
+  }
+}
+
+// ============================================
 // TYPE DEFINITIONS
 // ============================================
 
