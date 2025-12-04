@@ -1,8 +1,8 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useUseCase, useUseCaseROI, useDeleteUseCase, useCheckDelete } from '../hooks/useEntities';
+import { useUseCase, useUseCaseROI, useUseCaseAutomationAnalysis, useDeleteUseCase, useCheckDelete } from '../hooks/useEntities';
 import {
   ArrowLeft, Trash2, DollarSign, Target,
-  CheckCircle, XCircle, AlertTriangle, Users, Zap
+  CheckCircle, XCircle, AlertTriangle, Users, Zap, TrendingUp, Clock
 } from 'lucide-react';
 import { useState } from 'react';
 import { DependencyBlockModal } from '../components/dependencies/DependencyBlockModal';
@@ -13,6 +13,7 @@ export function UseCaseDetail() {
   const navigate = useNavigate();
   const { data: useCase, isLoading } = useUseCase(id);
   const { data: roiData } = useUseCaseROI(id);
+  const { data: automationAnalysis } = useUseCaseAutomationAnalysis(id);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [checkResult, setCheckResult] = useState<DependencyCheckResult | null>(null);
 
@@ -178,6 +179,59 @@ export function UseCaseDetail() {
               </div>
               <div className="text-xs text-gray-600 mt-1">
                 {roiData.currentState?.timePerOccurrenceMinutes}m → {roiData.proposedState?.timePerOccurrenceMinutes}m
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Automation Analysis */}
+      {automationAnalysis && (
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 mb-8 border-2 border-purple-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <TrendingUp className="mr-2 text-purple-600" size={28} />
+            Automation Analysis
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg p-4 shadow">
+              <div className="text-sm text-gray-500 mb-1">Automation Potential</div>
+              <div className="text-3xl font-bold text-purple-600">
+                {automationAnalysis.analysis?.automationPercentage}
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                {automationAnalysis.analysis?.automatableSteps} of {automationAnalysis.analysis?.totalSteps} steps
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow">
+              <div className="text-sm text-gray-500 mb-1">Time Savings</div>
+              <div className="text-3xl font-bold text-green-600">
+                {automationAnalysis.timeSavings?.savingsPercentage}
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                {automationAnalysis.timeSavings?.savingsMinutes} min per occurrence
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow">
+              <div className="text-sm text-gray-500 mb-1">Error Reduction</div>
+              <div className="text-3xl font-bold text-orange-600">
+                {automationAnalysis.analysis?.errorReductionPercentage}
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                {automationAnalysis.analysis?.errorProneSteps} error-prone steps
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 shadow">
+              <div className="text-sm text-gray-500 mb-1">Annual Impact</div>
+              <div className="text-3xl font-bold text-blue-600 flex items-center">
+                <Clock size={24} className="mr-1" />
+                {automationAnalysis.timeSavings?.annualTimeSavingsHours}h
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                Time saved per year
               </div>
             </div>
           </div>

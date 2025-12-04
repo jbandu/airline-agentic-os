@@ -443,6 +443,18 @@ export function useUseCaseROI(id: string | undefined) {
   });
 }
 
+export function useUseCaseAutomationAnalysis(id: string | undefined) {
+  return useQuery({
+    queryKey: ['use-cases', id, 'automation-analysis'],
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await api.getUseCaseAutomationAnalysis(id);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
 export function useCreateUseCase() {
   const queryClient = useQueryClient();
 

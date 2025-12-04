@@ -260,6 +260,10 @@ class ApiClient {
   async getUseCaseROI(id: string) {
     return this.fetch<ApiResponse<any>>(`/use-cases/${id}/roi`);
   }
+
+  async getUseCaseAutomationAnalysis(id: string) {
+    return this.fetch<ApiResponse<any>>(`/use-cases/${id}/automation-analysis`);
+  }
 }
 
 export const api = new ApiClient();
