@@ -18,6 +18,7 @@ import dependenciesRouter from './routes/dependencies';
 import auditRouter from './routes/audit';
 import personasRouter from './routes/personas';
 import useCasesRouter from './routes/use-cases';
+import certificationsRouter from './routes/certifications';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -87,6 +88,7 @@ app.use('/api/dependencies', dependenciesRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/personas', personasRouter);
 app.use('/api/use-cases', useCasesRouter);
+app.use('/api/certifications', certificationsRouter);
 
 // Root endpoint - API info in development, serve frontend in production
 if (!isProduction) {
