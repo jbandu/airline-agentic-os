@@ -1,0 +1,58 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "✈️ Airline Agentic OS Command Center" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9]: ✈️
+          - generic [ref=e10]:
+            - heading "Airline Agentic OS" [level=1] [ref=e11]
+            - paragraph [ref=e12]: Command Center
+        - navigation [ref=e13]:
+          - link "🎯 Command Center" [ref=e14] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e15]: 🎯
+            - generic [ref=e16]: Command Center
+          - link "🗂️ Domains" [ref=e17] [cursor=pointer]:
+            - /url: /domains
+            - generic [ref=e18]: 🗂️
+            - generic [ref=e19]: Domains
+          - link "👥 Personas" [ref=e20] [cursor=pointer]:
+            - /url: /personas
+            - generic [ref=e21]: 👥
+            - generic [ref=e22]: Personas
+          - link "💼 Use Cases" [ref=e23] [cursor=pointer]:
+            - /url: /use-cases
+            - generic [ref=e24]: 💼
+            - generic [ref=e25]: Use Cases
+          - link "🔧 MCPs" [ref=e26] [cursor=pointer]:
+            - /url: /mcps
+            - generic [ref=e27]: 🔧
+            - generic [ref=e28]: MCPs
+          - link "🤖 Agents" [ref=e29] [cursor=pointer]:
+            - /url: /agents
+            - generic [ref=e30]: 🤖
+            - generic [ref=e31]: Agents
+          - link "⚡ Workflows" [ref=e32] [cursor=pointer]:
+            - /url: /workflows
+            - generic [ref=e33]: ⚡
+            - generic [ref=e34]: Workflows
+          - link "🌉 Cross-Domain" [ref=e35] [cursor=pointer]:
+            - /url: /cross-domain
+            - generic [ref=e36]: 🌉
+            - generic [ref=e37]: Cross-Domain
+    - main [ref=e38]:
+      - generic [ref=e39]: Loading domains...
+    - contentinfo [ref=e40]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Airline Agentic Operating System
+          - paragraph [ref=e45]: Built with AI-powered automation
+        - generic [ref=e46]:
+          - generic [ref=e47]: Powered by
+          - generic [ref=e48]: Number Labs
+```

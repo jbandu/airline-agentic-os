@@ -1,0 +1,107 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "✈️ Airline Agentic OS Command Center" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e9]: ✈️
+          - generic [ref=e10]:
+            - heading "Airline Agentic OS" [level=1] [ref=e11]
+            - paragraph [ref=e12]: Command Center
+        - navigation [ref=e13]:
+          - link "🎯 Command Center" [ref=e14] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e15]: 🎯
+            - generic [ref=e16]: Command Center
+          - link "🗂️ Domains" [ref=e17] [cursor=pointer]:
+            - /url: /domains
+            - generic [ref=e18]: 🗂️
+            - generic [ref=e19]: Domains
+          - link "👥 Personas" [ref=e20] [cursor=pointer]:
+            - /url: /personas
+            - generic [ref=e21]: 👥
+            - generic [ref=e22]: Personas
+          - link "💼 Use Cases" [ref=e23] [cursor=pointer]:
+            - /url: /use-cases
+            - generic [ref=e24]: 💼
+            - generic [ref=e25]: Use Cases
+          - link "🔧 MCPs" [ref=e26] [cursor=pointer]:
+            - /url: /mcps
+            - generic [ref=e27]: 🔧
+            - generic [ref=e28]: MCPs
+          - link "🤖 Agents" [ref=e29] [cursor=pointer]:
+            - /url: /agents
+            - generic [ref=e30]: 🤖
+            - generic [ref=e31]: Agents
+          - link "⚡ Workflows" [ref=e32] [cursor=pointer]:
+            - /url: /workflows
+            - generic [ref=e33]: ⚡
+            - generic [ref=e34]: Workflows
+          - link "🌉 Cross-Domain" [ref=e35] [cursor=pointer]:
+            - /url: /cross-domain
+            - generic [ref=e36]: 🌉
+            - generic [ref=e37]: Cross-Domain
+    - main [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - heading "Dashboard" [level=1] [ref=e41]
+          - paragraph [ref=e42]: Overview of your airline agentic operating system
+        - generic [ref=e43]:
+          - generic [ref=e46]:
+            - img [ref=e48]
+            - generic [ref=e51]:
+              - term [ref=e52]: Domains
+              - definition [ref=e53]: "0"
+          - generic [ref=e56]:
+            - img [ref=e58]
+            - generic [ref=e63]:
+              - term [ref=e64]: MCPs
+              - definition [ref=e65]: "0"
+          - generic [ref=e68]:
+            - img [ref=e70]
+            - generic [ref=e74]:
+              - term [ref=e75]: Agents
+              - definition [ref=e76]: "0"
+          - generic [ref=e79]:
+            - img [ref=e81]
+            - generic [ref=e86]:
+              - term [ref=e87]: Workflows
+              - definition [ref=e88]: "0"
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - heading "MCP Status" [level=2] [ref=e91]
+            - generic [ref=e92]:
+              - generic [ref=e93]:
+                - generic [ref=e94]: Built
+                - generic [ref=e95]: "0"
+              - generic [ref=e96]:
+                - generic [ref=e97]: In Progress
+                - generic [ref=e98]: "0"
+              - generic [ref=e99]:
+                - generic [ref=e100]: Planned
+                - generic [ref=e101]: "0"
+          - generic [ref=e102]:
+            - heading "Agent Status" [level=2] [ref=e103]
+            - generic [ref=e104]:
+              - generic [ref=e105]:
+                - generic [ref=e106]: Active Agents
+                - generic [ref=e107]: "0"
+              - generic [ref=e108]:
+                - generic [ref=e109]: Inactive Agents
+                - generic [ref=e110]: "0"
+              - generic [ref=e111]:
+                - generic [ref=e112]: Total Workflows
+                - generic [ref=e113]: "0"
+    - contentinfo [ref=e114]:
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - paragraph [ref=e118]: Airline Agentic Operating System
+          - paragraph [ref=e119]: Built with AI-powered automation
+        - generic [ref=e120]:
+          - generic [ref=e121]: Powered by
+          - generic [ref=e122]: Number Labs
+```
