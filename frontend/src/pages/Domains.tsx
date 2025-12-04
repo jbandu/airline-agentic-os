@@ -1,11 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { domainsApi } from '@/lib/api';
+import { useDomains } from '../hooks/useEntities';
 
 export function Domains() {
-  const { data: domains, isLoading } = useQuery({
-    queryKey: ['domains'],
-    queryFn: () => domainsApi.getAll().then(res => res.data),
-  });
+  const { data: domains, isLoading } = useDomains();
 
   if (isLoading) {
     return <div>Loading domains...</div>;

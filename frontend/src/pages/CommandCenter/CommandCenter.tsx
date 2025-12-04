@@ -1,79 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StatCard } from '../../components/stats/StatCard';
 import { BuildProgress } from '../../components/stats/BuildProgress';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { GraphContainer } from '../../components/visualization/GraphContainer';
-import { api } from '../../lib/api';
-
-interface OverviewStats {
-  domains: number;
-  subdomains: number;
-  mcps: number;
-  tools: number;
-  agents: number;
-  workflows: number;
-}
-
-interface BuildProgressData {
-  counts: {
-    built: number;
-    inProgress: number;
-    planned: number;
-    total: number;
-  };
-  percentages: {
-    built: number;
-    inProgress: number;
-    planned: number;
-  };
-}
-
-interface DomainStat {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  subdomainCount: number;
-  mcpCount: number;
-  toolCount: number;
-  toolsByStatus: {
-    built: number;
-    inProgress: number;
-    planned: number;
-  };
-}
+import { useOverviewStats, useBuildProgress } from '../../hooks/useEntities';
 
 export function CommandCenter() {
-  const [overviewStats, setOverviewStats] = useState<OverviewStats | null>(null);
-  const [buildProgress, setBuildProgress] = useState<BuildProgressData | null>(null);
-  const [domainStats, setDomainStats] = useState<DomainStat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showVisualization, setShowVisualization] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [overviewRes, progressRes, domainsRes] = await Promise.all([
-          api.get('/api/stats/overview'),
-          api.get('/api/stats/build-progress'),
-          api.get('/api/stats/by-domain'),
-        ]);
+  const { data: overviewStats, isLoading: statsLoading, error: statsError } = useOverviewStats();
+  const { data: buildProgressData, isLoading: progressLoading } = useBuildProgress();
 
-        setOverviewStats(overviewRes.data.data);
-        setBuildProgress(progressRes.data.data);
-        setDomainStats(domainsRes.data.data);
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-        setError('Failed to load dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
+  const loading = statsLoading || progressLoading;
+  const error = statsError ? 'Failed to load dashboard data' : null;
 
   if (loading) {
     return (
@@ -149,13 +88,13 @@ export function CommandCenter() {
         )}
 
         {/* Build Progress */}
-        {buildProgress && (
+        {buildProgressData && (
           <div className="mb-8">
             <BuildProgress
-              built={buildProgress.counts.built}
-              inProgress={buildProgress.counts.inProgress}
-              planned={buildProgress.counts.planned}
-              total={buildProgress.counts.total}
+              built={buildProgressData.builtMCPs}
+              inProgress={buildProgressData.inProgressMCPs}
+              planned={buildProgressData.plannedMCPs}
+              total={buildProgressData.totalMCPs}
             />
           </div>
         )}
@@ -179,85 +118,6 @@ export function CommandCenter() {
               }}
             />
           )}
-        </div>
-
-        {/* Domain Overview */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Domain Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {domainStats.map((domain) => (
-              <div
-                key={domain.id}
-                className="bg-white rounded-lg shadow-md border border-gray-200 p-4 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-center mb-3">
-                  <div
-                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl"
-                    style={{ backgroundColor: `${domain.color}20`, color: domain.color }}
-                  >
-                    {domain.icon}
-                  </div>
-                  <h3 className="ml-3 text-sm font-semibold text-gray-900 line-clamp-2">
-                    {domain.name}
-                  </h3>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subdomains:</span>
-                    <span className="font-semibold text-gray-900">{domain.subdomainCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">MCPs:</span>
-                    <span className="font-semibold text-gray-900">{domain.mcpCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tools:</span>
-                    <span className="font-semibold text-gray-900">{domain.toolCount}</span>
-                  </div>
-                </div>
-
-                {/* Mini Progress */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                    <span>Build Progress</span>
-                    <span>
-                      {domain.toolCount > 0
-                        ? Math.round((domain.toolsByStatus.built / domain.toolCount) * 100)
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden flex">
-                    {domain.toolsByStatus.built > 0 && (
-                      <div
-                        className="bg-green-500"
-                        style={{
-                          width: `${(domain.toolsByStatus.built / domain.toolCount) * 100}%`,
-                        }}
-                      ></div>
-                    )}
-                    {domain.toolsByStatus.inProgress > 0 && (
-                      <div
-                        className="bg-blue-500"
-                        style={{
-                          width: `${(domain.toolsByStatus.inProgress / domain.toolCount) * 100}%`,
-                        }}
-                      ></div>
-                    )}
-                    {domain.toolsByStatus.planned > 0 && (
-                      <div
-                        className="bg-gray-400"
-                        style={{
-                          width: `${(domain.toolsByStatus.planned / domain.toolCount) * 100}%`,
-                        }}
-                      ></div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Quick Actions */}
