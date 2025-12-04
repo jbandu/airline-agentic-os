@@ -1,15 +1,17 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useDomain, useCheckDelete, useDeleteDomain } from '../hooks/useEntities';
+import { useDomain, useCheckDelete, useDeleteDomain, useCertifications } from '../hooks/useEntities';
 import { ArrowLeft, Lightbulb, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ResearchPanel } from '../components/research/ResearchPanel';
 import { DependencyBlockModal } from '../components/dependencies/DependencyBlockModal';
+import { CertificationList } from '../components/certifications/CertificationBadge';
 import type { DependencyCheckResult } from '../types';
 
 export function DomainDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: domainResponse, isLoading } = useDomain(id);
+  const { data: certifications } = useCertifications({ entityType: 'mcp' });
   const [showResearch, setShowResearch] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [checkResult, setCheckResult] = useState<DependencyCheckResult | null>(null);
@@ -18,6 +20,13 @@ export function DomainDetail() {
   const deleteDomain = useDeleteDomain();
 
   const domain = domainResponse;
+
+  // Group certifications by entity ID
+  const certsByEntity = (certifications || []).reduce((acc: any, cert: any) => {
+    if (!acc[cert.entityId]) acc[cert.entityId] = [];
+    acc[cert.entityId].push(cert);
+    return acc;
+  }, {});
 
   const handleDeleteClick = async () => {
     if (!id || !domain) return;
@@ -202,11 +211,16 @@ export function DomainDetail() {
                         {mcp.description && (
                           <p className="text-xs text-gray-500 line-clamp-2">{mcp.description}</p>
                         )}
-                        {mcp.tools && mcp.tools.length > 0 && (
-                          <div className="mt-2 text-xs text-gray-500">
-                            {mcp.tools.length} tool{mcp.tools.length !== 1 ? 's' : ''}
-                          </div>
-                        )}
+                        <div className="mt-2 flex items-center gap-3">
+                          {mcp.tools && mcp.tools.length > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {mcp.tools.length} tool{mcp.tools.length !== 1 ? 's' : ''}
+                            </div>
+                          )}
+                          {certsByEntity[mcp.id] && certsByEntity[mcp.id].length > 0 && (
+                            <CertificationList certifications={certsByEntity[mcp.id]} maxDisplay={2} />
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

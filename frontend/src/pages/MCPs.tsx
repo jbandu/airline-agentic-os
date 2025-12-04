@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { useMCPs, useCheckDelete, useDeleteMCP } from '../hooks/useEntities';
+import { useMCPs, useCheckDelete, useDeleteMCP, useCertifications } from '../hooks/useEntities';
 import { DependencyBlockModal } from '../components/dependencies/DependencyBlockModal';
+import { CertificationList } from '../components/certifications/CertificationBadge';
 import type { DependencyCheckResult } from '../types';
 
 const statusColors = {
@@ -12,12 +13,20 @@ const statusColors = {
 
 export function MCPs() {
   const { data: mcps, isLoading } = useMCPs();
+  const { data: certifications } = useCertifications({ entityType: 'mcp' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [checkResult, setCheckResult] = useState<DependencyCheckResult | null>(null);
   const [selectedMCP, setSelectedMCP] = useState<any>(null);
 
   const checkDelete = useCheckDelete();
   const deleteMCP = useDeleteMCP();
+
+  // Group certifications by entity ID
+  const certsByEntity = (certifications || []).reduce((acc: any, cert: any) => {
+    if (!acc[cert.entityId]) acc[cert.entityId] = [];
+    acc[cert.entityId].push(cert);
+    return acc;
+  }, {});
 
   const handleDeleteClick = async (mcp: any) => {
     setSelectedMCP(mcp);
@@ -111,8 +120,13 @@ export function MCPs() {
                       )}
                       {mcp.owner && <span>Owner: {mcp.owner}</span>}
                     </div>
-                    <div className="mt-2 text-sm text-gray-500">
-                      {mcp.tools?.length || 0} tools
+                    <div className="mt-2 flex items-center gap-4">
+                      <span className="text-sm text-gray-500">
+                        {mcp.tools?.length || 0} tools
+                      </span>
+                      {certsByEntity[mcp.id] && certsByEntity[mcp.id].length > 0 && (
+                        <CertificationList certifications={certsByEntity[mcp.id]} />
+                      )}
                     </div>
                   </div>
                 </div>

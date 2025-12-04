@@ -502,3 +502,32 @@ export function useDeleteUseCase() {
     },
   });
 }
+
+// ============================================================================
+// CERTIFICATIONS
+// ============================================================================
+
+export function useCertifications(filters?: {
+  entityType?: string;
+  entityId?: string;
+  certificationType?: string;
+  status?: string;
+}) {
+  return useQuery({
+    queryKey: ['certifications', filters],
+    queryFn: async () => {
+      return await api.getCertifications(filters as any);
+    },
+  });
+}
+
+export function useCertification(id: string | undefined) {
+  return useQuery({
+    queryKey: ['certifications', id],
+    queryFn: async () => {
+      if (!id) return null;
+      return await api.getCertification(id);
+    },
+    enabled: !!id,
+  });
+}

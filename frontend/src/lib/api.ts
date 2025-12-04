@@ -15,6 +15,10 @@ import type {
   AuditLog,
   AuditFilters,
   DependencyCheckResult,
+  Certification,
+  CertificationEntityType,
+  CertificationType,
+  CertificationStatus,
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -263,6 +267,57 @@ class ApiClient {
 
   async getUseCaseAutomationAnalysis(id: string) {
     return this.fetch<ApiResponse<any>>(`/use-cases/${id}/automation-analysis`);
+  }
+
+  // Certifications
+  async getCertifications(filters?: {
+    entityType?: CertificationEntityType;
+    entityId?: string;
+    certificationType?: CertificationType;
+    status?: CertificationStatus;
+  }) {
+    const params = new URLSearchParams(filters as any);
+    return this.fetch<Certification[]>(`/certifications?${params}`);
+  }
+
+  async getCertification(id: string) {
+    return this.fetch<Certification>(`/certifications/${id}`);
+  }
+
+  async createCertification(data: Partial<Certification>) {
+    return this.fetch<Certification>('/certifications', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCertification(id: string, data: Partial<Certification>) {
+    return this.fetch<Certification>(`/certifications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCertificationStatus(
+    id: string,
+    status: CertificationStatus,
+    changedBy?: string,
+    reason?: string
+  ) {
+    return this.fetch<Certification>(`/certifications/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, changedBy, reason }),
+    });
+  }
+
+  async deleteCertification(id: string) {
+    return this.fetch<void>(`/certifications/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getCertificationHistory(id: string) {
+    return this.fetch<any[]>(`/certifications/${id}/history`);
   }
 }
 

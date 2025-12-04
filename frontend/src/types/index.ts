@@ -394,3 +394,40 @@ export interface ForceGraphEdge extends GraphEdge {
   strength?: number;
   isCritical?: boolean;
 }
+
+// Certification types
+
+export type CertificationEntityType = 'tool' | 'mcp';
+export type CertificationType = 'security' | 'compliance' | 'performance' | 'integration' | 'data_privacy' | 'accessibility';
+export type CertificationStatus = 'pending' | 'in_progress' | 'certified' | 'expired' | 'revoked' | 'renewed';
+export type CertificationAction = 'created' | 'updated' | 'status_changed' | 'renewed' | 'revoked' | 'expired';
+
+export interface Certification {
+  id: string;
+  entityType: CertificationEntityType;
+  entityId: string;
+  certificationType: CertificationType;
+  status: CertificationStatus;
+  certifiedBy?: string;
+  certificationDate?: string;
+  expirationDate?: string;
+  requirements?: any;
+  evidence?: any;
+  notes?: string;
+  metadata?: any;
+  createdAt: string;
+  updatedAt: string;
+  history?: CertificationHistory[];
+}
+
+export interface CertificationHistory {
+  id: string;
+  certificationId: string;
+  action: CertificationAction;
+  previousStatus?: CertificationStatus;
+  newStatus?: CertificationStatus;
+  changedBy?: string;
+  reason?: string;
+  metadata?: any;
+  createdAt: string;
+}
