@@ -12,6 +12,8 @@ import { Workflows } from './pages/Workflows';
 import { CrossDomain } from './pages/CrossDomain';
 import { Personas } from './pages/Personas';
 import { PersonaDetail } from './pages/PersonaDetail';
+import { UseCases } from './pages/UseCases';
+import { UseCaseDetail } from './pages/UseCaseDetail';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
             <Route path="/cross-domain" element={<CrossDomain />} />
             <Route path="/personas" element={<Personas />} />
             <Route path="/personas/:id" element={<PersonaDetail />} />
+            <Route path="/use-cases" element={<UseCases />} />
+            <Route path="/use-cases/:id" element={<UseCaseDetail />} />
           </Routes>
         </main>
         <Footer />

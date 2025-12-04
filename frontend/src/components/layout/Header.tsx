@@ -7,6 +7,7 @@ export function Header() {
     { path: '/', label: 'Command Center', icon: '🎯' },
     { path: '/domains', label: 'Domains', icon: '🗂️' },
     { path: '/personas', label: 'Personas', icon: '👥' },
+    { path: '/use-cases', label: 'Use Cases', icon: '💼' },
     { path: '/mcps', label: 'MCPs', icon: '🔧' },
     { path: '/agents', label: 'Agents', icon: '🤖' },
     { path: '/workflows', label: 'Workflows', icon: '⚡' },
