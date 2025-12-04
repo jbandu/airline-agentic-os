@@ -5,6 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { CommandCenter } from './pages/CommandCenter/CommandCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Domains } from './pages/Domains';
+import { DomainDetail } from './pages/DomainDetail';
 import { MCPs } from './pages/MCPs';
 import { Agents } from './pages/Agents';
 import { Workflows } from './pages/Workflows';
@@ -21,6 +22,7 @@ function App() {
             <Route path="/" element={<CommandCenter />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/domains" element={<Domains />} />
+            <Route path="/domains/:id" element={<DomainDetail />} />
             <Route path="/mcps" element={<MCPs />} />
             <Route path="/agents" element={<Agents />} />
             <Route path="/workflows" element={<Workflows />} />
