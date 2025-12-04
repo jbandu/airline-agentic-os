@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { mcpsApi } from '@/lib/api';
+import { useMCPs } from '../hooks/useEntities';
 
 const statusColors = {
   built: 'bg-green-100 text-green-800',
@@ -8,10 +7,7 @@ const statusColors = {
 };
 
 export function MCPs() {
-  const { data: mcps, isLoading } = useQuery({
-    queryKey: ['mcps'],
-    queryFn: () => mcpsApi.getAll().then(res => res.data),
-  });
+  const { data: mcps, isLoading } = useMCPs();
 
   if (isLoading) {
     return <div>Loading MCPs...</div>;

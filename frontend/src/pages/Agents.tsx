@@ -1,15 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { agentsApi } from '@/lib/api';
-
 export function Agents() {
-  const { data: agents, isLoading } = useQuery({
-    queryKey: ['agents'],
-    queryFn: () => agentsApi.getAll().then(res => res.data),
-  });
-
-  if (isLoading) {
-    return <div>Loading agents...</div>;
-  }
+  // TODO: Implement agents API endpoints and hooks
+  const agents: any[] = [];
 
   return (
     <div>
@@ -20,8 +11,14 @@ export function Agents() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {agents?.map((agent: any) => (
+      {agents.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No agents configured yet.</p>
+          <p className="text-sm text-gray-400 mt-2">Agent management coming soon.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {agents.map((agent: any) => (
           <div
             key={agent.id}
             className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -67,8 +64,9 @@ export function Agents() {
               </div>
             )}
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
-import { workflowsApi } from '@/lib/api';
-
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
   planned: 'bg-blue-100 text-blue-800',
@@ -9,14 +6,8 @@ const statusColors = {
 };
 
 export function Workflows() {
-  const { data: workflows, isLoading } = useQuery({
-    queryKey: ['workflows'],
-    queryFn: () => workflowsApi.getAll().then(res => res.data),
-  });
-
-  if (isLoading) {
-    return <div>Loading workflows...</div>;
-  }
+  // TODO: Implement workflows API endpoints and hooks
+  const workflows: any[] = [];
 
   return (
     <div>
@@ -27,8 +18,14 @@ export function Workflows() {
         </p>
       </div>
 
-      <div className="space-y-6">
-        {workflows?.map((workflow: any) => (
+      {workflows.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No workflows configured yet.</p>
+          <p className="text-sm text-gray-400 mt-2">Workflow management coming soon.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {workflows.map((workflow: any) => (
           <div
             key={workflow.id}
             className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -113,8 +110,9 @@ export function Workflows() {
               </div>
             )}
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

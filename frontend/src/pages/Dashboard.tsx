@@ -1,27 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
-import { domainsApi, mcpsApi, agentsApi, workflowsApi } from '@/lib/api';
+import { useDomains, useMCPs } from '../hooks/useEntities';
 import { Plane, Database, Bot, GitBranch } from 'lucide-react';
 
 export function Dashboard() {
-  const { data: domains } = useQuery({
-    queryKey: ['domains'],
-    queryFn: () => domainsApi.getAll().then(res => res.data),
-  });
+  const { data: domains } = useDomains();
+  const { data: mcps } = useMCPs();
 
-  const { data: mcps } = useQuery({
-    queryKey: ['mcps'],
-    queryFn: () => mcpsApi.getAll().then(res => res.data),
-  });
-
-  const { data: agents } = useQuery({
-    queryKey: ['agents'],
-    queryFn: () => agentsApi.getAll().then(res => res.data),
-  });
-
-  const { data: workflows } = useQuery({
-    queryKey: ['workflows'],
-    queryFn: () => workflowsApi.getAll().then(res => res.data),
-  });
+  // TODO: Implement agents and workflows hooks
+  const agents: any[] = [];
+  const workflows: any[] = [];
 
   const stats = [
     {
