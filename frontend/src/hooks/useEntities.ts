@@ -274,6 +274,31 @@ export function useBuildProgress() {
 }
 
 // ============================================================================
+// DEPENDENCIES
+// ============================================================================
+
+export function useCheckDelete() {
+  return useMutation({
+    mutationFn: ({ entityType, entityId }: { entityType: string; entityId: string }) =>
+      api.checkDelete(entityType, entityId),
+  });
+}
+
+export function useCheckEdit() {
+  return useMutation({
+    mutationFn: ({
+      entityType,
+      entityId,
+      proposedChanges,
+    }: {
+      entityType: string;
+      entityId: string;
+      proposedChanges: any;
+    }) => api.checkEdit(entityType, entityId, proposedChanges),
+  });
+}
+
+// ============================================================================
 // AUDIT
 // ============================================================================
 

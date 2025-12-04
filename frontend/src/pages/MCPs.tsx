@@ -1,4 +1,8 @@
-import { useMCPs } from '../hooks/useEntities';
+import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { useMCPs, useCheckDelete, useDeleteMCP } from '../hooks/useEntities';
+import { DependencyBlockModal } from '../components/dependencies/DependencyBlockModal';
+import type { DependencyCheckResult } from '../types';
 
 const statusColors = {
   built: 'bg-green-100 text-green-800',
@@ -8,6 +12,45 @@ const statusColors = {
 
 export function MCPs() {
   const { data: mcps, isLoading } = useMCPs();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [checkResult, setCheckResult] = useState<DependencyCheckResult | null>(null);
+  const [selectedMCP, setSelectedMCP] = useState<any>(null);
+
+  const checkDelete = useCheckDelete();
+  const deleteMCP = useDeleteMCP();
+
+  const handleDeleteClick = async (mcp: any) => {
+    setSelectedMCP(mcp);
+    try {
+      const result = await checkDelete.mutateAsync({
+        entityType: 'mcp',
+        entityId: mcp.id,
+      });
+      setCheckResult(result);
+      setShowDeleteModal(true);
+    } catch (error) {
+      console.error('Dependency check failed:', error);
+    }
+  };
+
+  const handleDeleteConfirm = async (reason: string) => {
+    if (!selectedMCP) return;
+
+    try {
+      await deleteMCP.mutateAsync({ id: selectedMCP.id, reason });
+      setShowDeleteModal(false);
+      setSelectedMCP(null);
+      setCheckResult(null);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setSelectedMCP(null);
+    setCheckResult(null);
+  };
 
   if (isLoading) {
     return <div>Loading MCPs...</div>;
@@ -32,16 +75,26 @@ export function MCPs() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {mcp.name}
-                      </h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          statusColors[mcp.status as keyof typeof statusColors]
-                        }`}
+                      <div className="flex items-center gap-4">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {mcp.name}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            statusColors[mcp.status as keyof typeof statusColors]
+                          }`}
+                        >
+                          {mcp.status}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteClick(mcp)}
+                        disabled={checkDelete.isPending || deleteMCP.isPending}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                       >
-                        {mcp.status}
-                      </span>
+                        <Trash2 size={16} />
+                        Delete
+                      </button>
                     </div>
                     <p className="mt-2 text-sm text-gray-600">
                       {mcp.description}
@@ -68,6 +121,17 @@ export function MCPs() {
           ))}
         </ul>
       </div>
+
+      {/* Dependency Block Modal */}
+      {showDeleteModal && checkResult && selectedMCP && (
+        <DependencyBlockModal
+          checkResult={checkResult}
+          entityName={selectedMCP.name}
+          action="Delete"
+          onCancel={handleDeleteCancel}
+          onProceed={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

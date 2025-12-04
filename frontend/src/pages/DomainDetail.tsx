@@ -1,15 +1,55 @@
-import { useParams, Link } from 'react-router-dom';
-import { useDomain } from '../hooks/useEntities';
-import { ArrowLeft, Lightbulb } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useDomain, useCheckDelete, useDeleteDomain } from '../hooks/useEntities';
+import { ArrowLeft, Lightbulb, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ResearchPanel } from '../components/research/ResearchPanel';
+import { DependencyBlockModal } from '../components/dependencies/DependencyBlockModal';
+import type { DependencyCheckResult } from '../types';
 
 export function DomainDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: domainResponse, isLoading } = useDomain(id);
   const [showResearch, setShowResearch] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [checkResult, setCheckResult] = useState<DependencyCheckResult | null>(null);
+
+  const checkDelete = useCheckDelete();
+  const deleteDomain = useDeleteDomain();
 
   const domain = domainResponse;
+
+  const handleDeleteClick = async () => {
+    if (!id || !domain) return;
+
+    try {
+      const result = await checkDelete.mutateAsync({
+        entityType: 'domain',
+        entityId: id,
+      });
+      setCheckResult(result);
+      setShowDeleteModal(true);
+    } catch (error) {
+      console.error('Dependency check failed:', error);
+    }
+  };
+
+  const handleDeleteConfirm = async (reason: string) => {
+    if (!id) return;
+
+    try {
+      await deleteDomain.mutateAsync({ id, reason });
+      setShowDeleteModal(false);
+      navigate('/domains');
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setCheckResult(null);
+  };
 
   if (isLoading) {
     return (
@@ -60,13 +100,23 @@ export function DomainDetail() {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowResearch(!showResearch)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            <Lightbulb size={18} />
-            {showResearch ? 'Hide' : 'AI Research'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowResearch(!showResearch)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <Lightbulb size={18} />
+              {showResearch ? 'Hide' : 'AI Research'}
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              disabled={checkDelete.isPending || deleteDomain.isPending}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              <Trash2 size={18} />
+              Delete
+            </button>
+          </div>
         </div>
       </div>
 
@@ -166,6 +216,17 @@ export function DomainDetail() {
           </div>
         )}
       </div>
+
+      {/* Dependency Block Modal */}
+      {showDeleteModal && checkResult && (
+        <DependencyBlockModal
+          checkResult={checkResult}
+          entityName={domain.name}
+          action="Delete"
+          onCancel={handleDeleteCancel}
+          onProceed={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

@@ -174,6 +174,21 @@ class ApiClient {
   async getEntityHistory(entityType: string, entityId: string) {
     return this.fetch<ApiResponse<AuditLog[]>>(`/audit/entity/${entityType}/${entityId}`);
   }
+
+  // Dependencies
+  async checkDelete(entityType: string, entityId: string) {
+    return this.fetch<DependencyCheckResult>('/dependencies/check-delete', {
+      method: 'POST',
+      body: JSON.stringify({ entityType, entityId }),
+    });
+  }
+
+  async checkEdit(entityType: string, entityId: string, proposedChanges: any) {
+    return this.fetch<DependencyCheckResult>('/dependencies/check-edit', {
+      method: 'POST',
+      body: JSON.stringify({ entityType, entityId, proposedChanges }),
+    });
+  }
 }
 
 export const api = new ApiClient();
