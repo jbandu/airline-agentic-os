@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { crossDomainBridges, mcpDependencies } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { CrossDomainService } from '../services/crossDomain';
 
 const router = Router();
 
@@ -244,6 +245,70 @@ router.delete('/mcp-dependencies/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting MCP dependency:', error);
     res.status(500).json({ error: 'Failed to delete MCP dependency' });
+  }
+});
+
+// Cross-Domain Analysis routes
+// GET /api/cross-domain/impact/:subdomainId - Analyze cross-domain impact
+router.get('/impact/:subdomainId', async (req, res) => {
+  try {
+    const impact = await CrossDomainService.analyzeCrossDomainImpact(req.params.subdomainId);
+    res.json({ success: true, data: impact });
+  } catch (error) {
+    console.error('Error analyzing cross-domain impact:', error);
+    res.status(500).json({ success: false, error: 'Failed to analyze impact' });
+  }
+});
+
+// GET /api/cross-domain/flow/:sourceId/:targetId - Get data flow path
+router.get('/flow/:sourceId/:targetId', async (req, res) => {
+  try {
+    const path = await CrossDomainService.getDataFlowPath(
+      req.params.sourceId,
+      req.params.targetId
+    );
+
+    if (!path) {
+      return res.json({ success: true, data: null, message: 'No path found' });
+    }
+
+    res.json({ success: true, data: path });
+  } catch (error) {
+    console.error('Error finding data flow path:', error);
+    res.status(500).json({ success: false, error: 'Failed to find path' });
+  }
+});
+
+// GET /api/cross-domain/critical-mcps - Get critical MCPs
+router.get('/critical-mcps', async (req, res) => {
+  try {
+    const criticalMcps = await CrossDomainService.getCriticalMCPs();
+    res.json({ success: true, data: criticalMcps });
+  } catch (error) {
+    console.error('Error getting critical MCPs:', error);
+    res.status(500).json({ success: false, error: 'Failed to get critical MCPs' });
+  }
+});
+
+// GET /api/cross-domain/dependency-chain/:mcpId - Get MCP dependency chain
+router.get('/dependency-chain/:mcpId', async (req, res) => {
+  try {
+    const chain = await CrossDomainService.getDependencyChain(req.params.mcpId);
+    res.json({ success: true, data: chain });
+  } catch (error) {
+    console.error('Error getting dependency chain:', error);
+    res.status(500).json({ success: false, error: 'Failed to get dependency chain' });
+  }
+});
+
+// GET /api/cross-domain/suggestions - Get bridge suggestions
+router.get('/suggestions', async (req, res) => {
+  try {
+    const suggestions = await CrossDomainService.suggestBridges();
+    res.json({ success: true, data: suggestions });
+  } catch (error) {
+    console.error('Error getting bridge suggestions:', error);
+    res.status(500).json({ success: false, error: 'Failed to get suggestions' });
   }
 });
 

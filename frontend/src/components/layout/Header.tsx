@@ -9,6 +9,7 @@ export function Header() {
     { path: '/mcps', label: 'MCPs', icon: '🔧' },
     { path: '/agents', label: 'Agents', icon: '🤖' },
     { path: '/workflows', label: 'Workflows', icon: '⚡' },
+    { path: '/cross-domain', label: 'Cross-Domain', icon: '🌉' },
   ];
 
   return (

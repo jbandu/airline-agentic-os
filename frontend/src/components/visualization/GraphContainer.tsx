@@ -13,7 +13,7 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
   const [nodes, setNodes] = useState<GraphNode[]>([]);
   const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [filters, setFilters] = useState<GraphFilters>({
-    nodeTypes: new Set<NodeType>(['domain', 'subdomain', 'mcp']),
+    nodeTypes: new Set<NodeType>(['domain']), // Default: only domains
     domains: new Set(),
     statuses: new Set(),
     searchQuery: '',
@@ -21,6 +21,7 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAgents, setShowAgents] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     async function fetchGraphData() {
@@ -207,6 +208,37 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
     });
   };
 
+  const resetView = () => {
+    // Reset to domains-only view
+    setFilters({
+      nodeTypes: new Set<NodeType>(['domain']),
+      domains: new Set(),
+      statuses: new Set(),
+      searchQuery: '',
+    });
+    setShowAgents(false);
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[600px]">
@@ -232,60 +264,102 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isFullscreen ? 'p-6 bg-gray-900' : ''}`}>
       {/* Controls */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Filter Node Types</h3>
-            <div className="flex gap-2">
+      <div className={`border border-gray-200 rounded-lg p-4 ${isFullscreen ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <h3 className={`text-sm font-semibold mb-2 ${isFullscreen ? 'text-white' : 'text-gray-900'}`}>
+              Layer Controls
+            </h3>
+            <div className="flex gap-2 flex-wrap">
               {(['domain', 'subdomain', 'mcp'] as NodeType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => toggleNodeType(type)}
-                  className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all ${
                     filters.nodeTypes.has(type)
-                      ? 'bg-blue-100 border-blue-500 text-blue-700'
-                      : 'bg-gray-100 border-gray-300 text-gray-600'
+                      ? 'bg-blue-500 border-blue-600 text-white shadow-lg'
+                      : isFullscreen
+                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}s
                 </button>
               ))}
               <button
                 onClick={() => setShowAgents(!showAgents)}
-                className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all ${
                   showAgents
-                    ? 'bg-purple-100 border-purple-500 text-purple-700'
-                    : 'bg-gray-100 border-gray-300 text-gray-600'
+                    ? 'bg-purple-500 border-purple-600 text-white shadow-lg'
+                    : isFullscreen
+                    ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Agents {showAgents ? '(Loading...)' : ''}
+                Agents {showAgents ? '✓' : ''}
               </button>
             </div>
           </div>
-          <div className="text-sm text-gray-600">
-            <div>Nodes: {nodes.length}</div>
-            <div>Edges: {edges.length}</div>
+
+          <div className="flex items-center gap-3">
+            <div className={`text-sm ${isFullscreen ? 'text-gray-300' : 'text-gray-600'}`}>
+              <div>Nodes: <span className="font-semibold">{nodes.length}</span></div>
+              <div>Edges: <span className="font-semibold">{edges.length}</span></div>
+            </div>
+
+            <div className="border-l border-gray-300 pl-3 flex gap-2">
+              <button
+                onClick={resetView}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  isFullscreen
+                    ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+                title="Reset to domains-only view"
+              >
+                🔄 Reset View
+              </button>
+
+              <button
+                onClick={toggleFullscreen}
+                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                  isFullscreen
+                    ? 'bg-red-600 border-red-700 text-white hover:bg-red-700'
+                    : 'bg-blue-600 border-blue-700 text-white hover:bg-blue-700'
+                }`}
+                title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              >
+                {isFullscreen ? '🗗 Exit Fullscreen' : '⛶ Fullscreen'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Visualization */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3">
+      <div className={isFullscreen ? 'flex gap-4' : 'grid grid-cols-1 lg:grid-cols-4 gap-4'}>
+        <div className={isFullscreen ? 'flex-1' : 'lg:col-span-3'}>
           <ForceGraph
             nodes={nodes}
             edges={edges}
             filters={filters}
             onNodeClick={onNodeClick}
-            width={1000}
-            height={700}
+            width={isFullscreen ? window.innerWidth - 450 : 1000}
+            height={isFullscreen ? window.innerHeight - 200 : 700}
           />
         </div>
-        <div className="lg:col-span-1">
-          <GraphLegend />
-        </div>
+        {!isFullscreen && (
+          <div className="lg:col-span-1">
+            <GraphLegend />
+          </div>
+        )}
+        {isFullscreen && (
+          <div className="w-80">
+            <GraphLegend />
+          </div>
+        )}
       </div>
     </div>
   );
