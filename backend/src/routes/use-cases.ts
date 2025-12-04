@@ -1,0 +1,510 @@
+import { Router } from 'express';
+import { db } from '../db';
+import { useCases, useCaseSteps } from '../db/schema';
+import { eq, and, gte, lte, inArray } from 'drizzle-orm';
+
+const router = Router();
+
+// GET /api/use-cases - Get all use cases with filters
+router.get('/', async (req, res) => {
+  try {
+    const {
+      personaId,
+      status,
+      businessImpact,
+      implementationWave,
+      category,
+      minPriority,
+    } = req.query;
+
+    let whereConditions: any[] = [];
+
+    if (personaId) {
+      whereConditions.push(eq(useCases.personaId, personaId as string));
+    }
+
+    if (status) {
+      whereConditions.push(eq(useCases.status, status as any));
+    }
+
+    if (businessImpact) {
+      whereConditions.push(eq(useCases.businessImpact, businessImpact as any));
+    }
+
+    if (implementationWave) {
+      whereConditions.push(
+        eq(useCases.implementationWave, parseInt(implementationWave as string))
+      );
+    }
+
+    if (category) {
+      whereConditions.push(eq(useCases.category, category as any));
+    }
+
+    if (minPriority) {
+      whereConditions.push(
+        gte(useCases.priority, parseInt(minPriority as string))
+      );
+    }
+
+    const allUseCases = await db.query.useCases.findMany({
+      with: {
+        persona: {
+          with: {
+            subdomain: true,
+          },
+        },
+        steps: {
+          orderBy: (steps, { asc }) => [asc(steps.stepNumber)],
+        },
+      },
+      where: whereConditions.length > 0 ? and(...whereConditions) : undefined,
+      orderBy: (useCases, { desc, asc }) => [
+        desc(useCases.priority),
+        asc(useCases.name),
+      ],
+    });
+
+    res.json(allUseCases);
+  } catch (error) {
+    console.error('Error fetching use cases:', error);
+    res.status(500).json({ error: 'Failed to fetch use cases' });
+  }
+});
+
+// GET /api/use-cases/:id - Get a single use case with full details
+router.get('/:id', async (req, res) => {
+  try {
+    const useCase = await db.query.useCases.findFirst({
+      where: eq(useCases.id, req.params.id),
+      with: {
+        persona: {
+          with: {
+            subdomain: {
+              with: {
+                domain: true,
+              },
+            },
+          },
+        },
+        steps: {
+          orderBy: (steps, { asc }) => [asc(steps.stepNumber)],
+        },
+      },
+    });
+
+    if (!useCase) {
+      return res.status(404).json({ error: 'Use case not found' });
+    }
+
+    res.json(useCase);
+  } catch (error) {
+    console.error('Error fetching use case:', error);
+    res.status(500).json({ error: 'Failed to fetch use case' });
+  }
+});
+
+// POST /api/use-cases - Create a new use case
+router.post('/', async (req, res) => {
+  try {
+    const {
+      personaId,
+      code,
+      name,
+      description,
+      detailedNarrative,
+      frequency,
+      typicalDurationMinutes,
+      timePressure,
+      peakTimes,
+      triggers,
+      preconditions,
+      postconditions,
+      complexity,
+      automationPotential,
+      currentPainLevel,
+      businessImpact,
+      estimatedAnnualOccurrences,
+      estimatedCostPerOccurrence,
+      estimatedAnnualValue,
+      currentProcess,
+      currentToolsUsed,
+      currentTimeMinutes,
+      currentSuccessRate,
+      proposedProcess,
+      proposedTimeMinutes,
+      proposedSuccessRate,
+      category,
+      priority,
+      implementationWave,
+      status,
+      relatedUseCases,
+      regulatoryReferences,
+      kpis,
+      metadata,
+    } = req.body;
+
+    if (!personaId || !code || !name) {
+      return res.status(400).json({
+        error: 'personaId, code, and name are required',
+      });
+    }
+
+    const [newUseCase] = await db
+      .insert(useCases)
+      .values({
+        personaId,
+        code,
+        name,
+        description,
+        detailedNarrative,
+        frequency,
+        typicalDurationMinutes,
+        timePressure,
+        peakTimes,
+        triggers,
+        preconditions,
+        postconditions,
+        complexity: complexity || 1,
+        automationPotential: automationPotential || 1,
+        currentPainLevel: currentPainLevel || 1,
+        businessImpact,
+        estimatedAnnualOccurrences,
+        estimatedCostPerOccurrence,
+        estimatedAnnualValue,
+        currentProcess,
+        currentToolsUsed,
+        currentTimeMinutes,
+        currentSuccessRate,
+        proposedProcess,
+        proposedTimeMinutes,
+        proposedSuccessRate,
+        category,
+        priority: priority || 3,
+        implementationWave: implementationWave || 1,
+        status,
+        relatedUseCases,
+        regulatoryReferences,
+        kpis,
+        metadata,
+      })
+      .returning();
+
+    res.status(201).json(newUseCase);
+  } catch (error) {
+    console.error('Error creating use case:', error);
+    res.status(500).json({ error: 'Failed to create use case' });
+  }
+});
+
+// PUT /api/use-cases/:id - Update a use case
+router.put('/:id', async (req, res) => {
+  try {
+    const {
+      code,
+      name,
+      description,
+      detailedNarrative,
+      frequency,
+      typicalDurationMinutes,
+      timePressure,
+      peakTimes,
+      triggers,
+      preconditions,
+      postconditions,
+      complexity,
+      automationPotential,
+      currentPainLevel,
+      businessImpact,
+      estimatedAnnualOccurrences,
+      estimatedCostPerOccurrence,
+      estimatedAnnualValue,
+      currentProcess,
+      currentToolsUsed,
+      currentTimeMinutes,
+      currentSuccessRate,
+      proposedProcess,
+      proposedTimeMinutes,
+      proposedSuccessRate,
+      category,
+      priority,
+      implementationWave,
+      status,
+      relatedUseCases,
+      regulatoryReferences,
+      kpis,
+      metadata,
+    } = req.body;
+
+    const [updatedUseCase] = await db
+      .update(useCases)
+      .set({
+        code,
+        name,
+        description,
+        detailedNarrative,
+        frequency,
+        typicalDurationMinutes,
+        timePressure,
+        peakTimes,
+        triggers,
+        preconditions,
+        postconditions,
+        complexity,
+        automationPotential,
+        currentPainLevel,
+        businessImpact,
+        estimatedAnnualOccurrences,
+        estimatedCostPerOccurrence,
+        estimatedAnnualValue,
+        currentProcess,
+        currentToolsUsed,
+        currentTimeMinutes,
+        currentSuccessRate,
+        proposedProcess,
+        proposedTimeMinutes,
+        proposedSuccessRate,
+        category,
+        priority,
+        implementationWave,
+        status,
+        relatedUseCases,
+        regulatoryReferences,
+        kpis,
+        metadata,
+        updatedAt: new Date(),
+      })
+      .where(eq(useCases.id, req.params.id))
+      .returning();
+
+    if (!updatedUseCase) {
+      return res.status(404).json({ error: 'Use case not found' });
+    }
+
+    res.json(updatedUseCase);
+  } catch (error) {
+    console.error('Error updating use case:', error);
+    res.status(500).json({ error: 'Failed to update use case' });
+  }
+});
+
+// DELETE /api/use-cases/:id - Delete a use case
+router.delete('/:id', async (req, res) => {
+  try {
+    await db.delete(useCases).where(eq(useCases.id, req.params.id));
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting use case:', error);
+    res.status(500).json({ error: 'Failed to delete use case' });
+  }
+});
+
+// GET /api/use-cases/:id/roi - Calculate ROI for a use case
+router.get('/:id/roi', async (req, res) => {
+  try {
+    const useCase = await db.query.useCases.findFirst({
+      where: eq(useCases.id, req.params.id),
+    });
+
+    if (!useCase) {
+      return res.status(404).json({ error: 'Use case not found' });
+    }
+
+    // Calculate ROI
+    const currentAnnualCost =
+      (useCase.estimatedAnnualOccurrences || 0) *
+      ((useCase.estimatedCostPerOccurrence || 0) / 100);
+
+    const proposedAnnualCost =
+      (useCase.estimatedAnnualOccurrences || 0) *
+      ((useCase.estimatedCostPerOccurrence || 0) / 100) *
+      ((useCase.proposedTimeMinutes || 1) / (useCase.currentTimeMinutes || 1));
+
+    const annualSavings = currentAnnualCost - proposedAnnualCost;
+
+    const timeSavingsPerOccurrence =
+      (useCase.currentTimeMinutes || 0) - (useCase.proposedTimeMinutes || 0);
+
+    const annualTimeSavingsHours =
+      ((useCase.estimatedAnnualOccurrences || 0) *
+        timeSavingsPerOccurrence) /
+      60;
+
+    const successRateImprovement =
+      (useCase.proposedSuccessRate || 100) -
+      (useCase.currentSuccessRate || 100);
+
+    const roiPercentage =
+      currentAnnualCost > 0
+        ? ((annualSavings / currentAnnualCost) * 100).toFixed(0)
+        : '0';
+
+    res.json({
+      useCase: {
+        id: useCase.id,
+        code: useCase.code,
+        name: useCase.name,
+      },
+      currentState: {
+        timePerOccurrenceMinutes: useCase.currentTimeMinutes,
+        successRate: useCase.currentSuccessRate,
+        annualCost: currentAnnualCost,
+      },
+      proposedState: {
+        timePerOccurrenceMinutes: useCase.proposedTimeMinutes,
+        successRate: useCase.proposedSuccessRate,
+        annualCost: proposedAnnualCost,
+      },
+      roi: {
+        annualSavings,
+        annualTimeSavingsHours,
+        successRateImprovement,
+        roiPercentage: `${roiPercentage}%`,
+      },
+      estimatedAnnualOccurrences: useCase.estimatedAnnualOccurrences,
+    });
+  } catch (error) {
+    console.error('Error calculating ROI:', error);
+    res.status(500).json({ error: 'Failed to calculate ROI' });
+  }
+});
+
+// Use Case Steps routes
+// GET /api/use-cases/:id/steps - Get all steps for a use case
+router.get('/:id/steps', async (req, res) => {
+  try {
+    const steps = await db.query.useCaseSteps.findMany({
+      where: eq(useCaseSteps.useCaseId, req.params.id),
+      orderBy: (steps, { asc }) => [asc(steps.stepNumber)],
+    });
+
+    res.json(steps);
+  } catch (error) {
+    console.error('Error fetching use case steps:', error);
+    res.status(500).json({ error: 'Failed to fetch use case steps' });
+  }
+});
+
+// POST /api/use-cases/:id/steps - Create a use case step
+router.post('/:id/steps', async (req, res) => {
+  try {
+    const useCaseId = req.params.id;
+    const {
+      stepNumber,
+      name,
+      description,
+      actor,
+      actionType,
+      currentDurationSeconds,
+      targetDurationSeconds,
+      canAutomate,
+      automationNotes,
+      errorProne,
+      errorNotes,
+      systemsInvolved,
+      dataNeeded,
+      dataProduced,
+      decisionCriteria,
+    } = req.body;
+
+    if (!stepNumber || !name) {
+      return res.status(400).json({
+        error: 'stepNumber and name are required',
+      });
+    }
+
+    const [newStep] = await db
+      .insert(useCaseSteps)
+      .values({
+        useCaseId,
+        stepNumber,
+        name,
+        description,
+        actor,
+        actionType,
+        currentDurationSeconds,
+        targetDurationSeconds,
+        canAutomate: canAutomate || false,
+        automationNotes,
+        errorProne: errorProne || false,
+        errorNotes,
+        systemsInvolved,
+        dataNeeded,
+        dataProduced,
+        decisionCriteria,
+      })
+      .returning();
+
+    res.status(201).json(newStep);
+  } catch (error) {
+    console.error('Error creating use case step:', error);
+    res.status(500).json({ error: 'Failed to create use case step' });
+  }
+});
+
+// PUT /api/use-cases/:useCaseId/steps/:id - Update a use case step
+router.put('/:useCaseId/steps/:id', async (req, res) => {
+  try {
+    const {
+      stepNumber,
+      name,
+      description,
+      actor,
+      actionType,
+      currentDurationSeconds,
+      targetDurationSeconds,
+      canAutomate,
+      automationNotes,
+      errorProne,
+      errorNotes,
+      systemsInvolved,
+      dataNeeded,
+      dataProduced,
+      decisionCriteria,
+    } = req.body;
+
+    const [updatedStep] = await db
+      .update(useCaseSteps)
+      .set({
+        stepNumber,
+        name,
+        description,
+        actor,
+        actionType,
+        currentDurationSeconds,
+        targetDurationSeconds,
+        canAutomate,
+        automationNotes,
+        errorProne,
+        errorNotes,
+        systemsInvolved,
+        dataNeeded,
+        dataProduced,
+        decisionCriteria,
+      })
+      .where(eq(useCaseSteps.id, req.params.id))
+      .returning();
+
+    if (!updatedStep) {
+      return res.status(404).json({ error: 'Use case step not found' });
+    }
+
+    res.json(updatedStep);
+  } catch (error) {
+    console.error('Error updating use case step:', error);
+    res.status(500).json({ error: 'Failed to update use case step' });
+  }
+});
+
+// DELETE /api/use-cases/:useCaseId/steps/:id - Delete a use case step
+router.delete('/:useCaseId/steps/:id', async (req, res) => {
+  try {
+    await db.delete(useCaseSteps).where(eq(useCaseSteps.id, req.params.id));
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting use case step:', error);
+    res.status(500).json({ error: 'Failed to delete use case step' });
+  }
+});
+
+export default router;

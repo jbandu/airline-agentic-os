@@ -16,6 +16,8 @@ import crossDomainRouter from './routes/cross-domain';
 import statsRouter from './routes/stats';
 import dependenciesRouter from './routes/dependencies';
 import auditRouter from './routes/audit';
+import personasRouter from './routes/personas';
+import useCasesRouter from './routes/use-cases';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -85,6 +87,8 @@ app.use('/api/cross-domain', crossDomainRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/dependencies', dependenciesRouter);
 app.use('/api/audit', auditRouter);
+app.use('/api/personas', personasRouter);
+app.use('/api/use-cases', useCasesRouter);
 
 // Root endpoint - API info in development, serve frontend in production
 if (!isProduction) {
@@ -102,6 +106,8 @@ if (!isProduction) {
         crossDomain: '/api/cross-domain',
         dependencies: '/api/dependencies',
         audit: '/api/audit',
+        personas: '/api/personas',
+        useCases: '/api/use-cases',
       },
     });
   });

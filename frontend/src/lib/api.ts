@@ -189,6 +189,77 @@ class ApiClient {
       body: JSON.stringify({ entityType, entityId, proposedChanges }),
     });
   }
+
+  // Personas
+  async getPersonas(filters?: { subdomainId?: string; airlineType?: string }) {
+    const params = new URLSearchParams(filters as any);
+    return this.fetch<ApiResponse<any[]>>(`/personas?${params}`);
+  }
+
+  async getPersona(id: string) {
+    return this.fetch<ApiResponse<any>>(`/personas/${id}`);
+  }
+
+  async createPersona(data: any) {
+    return this.fetch<ApiResponse<any>>('/personas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePersona(id: string, data: any) {
+    return this.fetch<ApiResponse<any>>(`/personas/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePersona(id: string) {
+    return this.fetch<ApiResponse<void>>(`/personas/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Use Cases
+  async getUseCases(filters?: {
+    personaId?: string;
+    status?: string;
+    businessImpact?: string;
+    implementationWave?: number;
+    category?: string;
+    minPriority?: number;
+  }) {
+    const params = new URLSearchParams(filters as any);
+    return this.fetch<ApiResponse<any[]>>(`/use-cases?${params}`);
+  }
+
+  async getUseCase(id: string) {
+    return this.fetch<ApiResponse<any>>(`/use-cases/${id}`);
+  }
+
+  async createUseCase(data: any) {
+    return this.fetch<ApiResponse<any>>('/use-cases', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUseCase(id: string, data: any) {
+    return this.fetch<ApiResponse<any>>(`/use-cases/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUseCase(id: string) {
+    return this.fetch<ApiResponse<void>>(`/use-cases/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUseCaseROI(id: string) {
+    return this.fetch<ApiResponse<any>>(`/use-cases/${id}/roi`);
+  }
 }
 
 export const api = new ApiClient();
