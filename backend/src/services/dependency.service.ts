@@ -2,6 +2,7 @@ import * as neo4jQueries from '../db/neo4j/queries';
 import { db } from '../db/index';
 import { eq } from 'drizzle-orm';
 import { mcps, tools, agents, workflows, crossDomainBridges, mcpDependencies } from '../db/schema';
+import { ResearchService } from './research.service';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -580,8 +581,24 @@ export class DependencyService {
    * Generate Claude explanation for blocked action
    */
   async explainWithClaude(checkResult: DependencyCheckResult): Promise<string> {
-    // This would integrate with Anthropic SDK
-    // For now, return a formatted explanation
+    try {
+      // Try to get AI-powered explanation
+      const researchService = new ResearchService();
+      const aiExplanation = await researchService.explainDependencyCheck(
+        checkResult.contextForAI.entityType,
+        checkResult.contextForAI.entityName,
+        checkResult.contextForAI.action,
+        checkResult
+      );
+
+      if (aiExplanation && aiExplanation !== 'Unable to generate explanation at this time.') {
+        return aiExplanation;
+      }
+    } catch (error) {
+      console.warn('Failed to get AI explanation, falling back to basic explanation:', error);
+    }
+
+    // Fallback to basic formatted explanation
     const explanation = [
       `Action: ${checkResult.contextForAI.action} on ${checkResult.contextForAI.entityType} "${checkResult.contextForAI.entityName}"`,
       '',
