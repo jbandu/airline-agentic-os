@@ -19,6 +19,7 @@ export const useCaseCategoryEnum = pgEnum('use_case_category', ['operational', '
 export const useCaseStatusEnum = pgEnum('use_case_status', ['identified', 'analyzed', 'designing', 'building', 'testing', 'deployed', 'measuring']);
 export const useCaseStepActorEnum = pgEnum('use_case_step_actor', ['human', 'agent', 'system', 'human_with_agent']);
 export const useCaseStepActionTypeEnum = pgEnum('use_case_step_action_type', ['decision', 'data_entry', 'data_lookup', 'calculation', 'communication', 'validation', 'approval', 'notification']);
+export const useCaseCoverageEnum = pgEnum('use_case_coverage', ['full', 'partial', 'supporting']);
 
 // 1. Domains
 export const domains = pgTable('domains', {
@@ -283,6 +284,46 @@ export const workflowAgents = pgTable('workflow_agents', {
   agentIdIdx: index('workflow_agents_agent_id_idx').on(table.agentId),
 }));
 
+// 9A. Use Case Workflows (Junction Table) - Phase 6C Wave 2
+export const useCaseWorkflows = pgTable('use_case_workflows', {
+  useCaseId: uuid('use_case_id').notNull().references(() => useCases.id, { onDelete: 'cascade' }),
+  workflowId: uuid('workflow_id').notNull().references(() => workflows.id, { onDelete: 'cascade' }),
+  coverage: useCaseCoverageEnum('coverage').notNull().default('partial'),
+  coveragePercentage: integer('coverage_percentage'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.useCaseId, table.workflowId] }),
+  useCaseIdIdx: index('use_case_workflows_use_case_id_idx').on(table.useCaseId),
+  workflowIdIdx: index('use_case_workflows_workflow_id_idx').on(table.workflowId),
+}));
+
+// 9B. Use Case Agents (Junction Table) - Phase 6C Wave 2
+export const useCaseAgents = pgTable('use_case_agents', {
+  useCaseId: uuid('use_case_id').notNull().references(() => useCases.id, { onDelete: 'cascade' }),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  role: text('role'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.useCaseId, table.agentId] }),
+  useCaseIdIdx: index('use_case_agents_use_case_id_idx').on(table.useCaseId),
+  agentIdIdx: index('use_case_agents_agent_id_idx').on(table.agentId),
+}));
+
+// 9C. Use Case Tools (Junction Table) - Phase 6C Wave 2
+export const useCaseTools = pgTable('use_case_tools', {
+  useCaseId: uuid('use_case_id').notNull().references(() => useCases.id, { onDelete: 'cascade' }),
+  toolId: uuid('tool_id').notNull().references(() => tools.id, { onDelete: 'cascade' }),
+  role: text('role'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.useCaseId, table.toolId] }),
+  useCaseIdIdx: index('use_case_tools_use_case_id_idx').on(table.useCaseId),
+  toolIdIdx: index('use_case_tools_tool_id_idx').on(table.toolId),
+}));
+
 // 10. Agent Collaborations (Agent-to-Agent Relationships)
 export const agentCollaborations = pgTable('agent_collaborations', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -363,6 +404,9 @@ export const useCasesRelations = relations(useCases, ({ one, many }) => ({
     references: [personas.id],
   }),
   steps: many(useCaseSteps),
+  workflowLinks: many(useCaseWorkflows),
+  agentLinks: many(useCaseAgents),
+  toolLinks: many(useCaseTools),
 }));
 
 export const useCaseStepsRelations = relations(useCaseSteps, ({ one }) => ({
@@ -395,11 +439,12 @@ export const mcpsRelations = relations(mcps, ({ one, many }) => ({
   }),
 }));
 
-export const toolsRelations = relations(tools, ({ one }) => ({
+export const toolsRelations = relations(tools, ({ one, many }) => ({
   mcp: one(mcps, {
     fields: [tools.mcpId],
     references: [mcps.id],
   }),
+  useCaseLinks: many(useCaseTools),
 }));
 
 export const agentCategoriesRelations = relations(agentCategories, ({ many }) => ({
@@ -416,6 +461,7 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
     references: [mcps.id],
   }),
   workflowAgents: many(workflowAgents),
+  useCaseLinks: many(useCaseAgents),
   sourceCollaborations: many(agentCollaborations, {
     relationName: 'sourceCollaborations',
   }),
@@ -431,6 +477,7 @@ export const workflowsRelations = relations(workflows, ({ one, many }) => ({
   }),
   workflowMcps: many(workflowMcps),
   workflowAgents: many(workflowAgents),
+  useCaseLinks: many(useCaseWorkflows),
 }));
 
 export const workflowMcpsRelations = relations(workflowMcps, ({ one }) => ({
@@ -452,6 +499,39 @@ export const workflowAgentsRelations = relations(workflowAgents, ({ one }) => ({
   agent: one(agents, {
     fields: [workflowAgents.agentId],
     references: [agents.id],
+  }),
+}));
+
+export const useCaseWorkflowsRelations = relations(useCaseWorkflows, ({ one }) => ({
+  useCase: one(useCases, {
+    fields: [useCaseWorkflows.useCaseId],
+    references: [useCases.id],
+  }),
+  workflow: one(workflows, {
+    fields: [useCaseWorkflows.workflowId],
+    references: [workflows.id],
+  }),
+}));
+
+export const useCaseAgentsRelations = relations(useCaseAgents, ({ one }) => ({
+  useCase: one(useCases, {
+    fields: [useCaseAgents.useCaseId],
+    references: [useCases.id],
+  }),
+  agent: one(agents, {
+    fields: [useCaseAgents.agentId],
+    references: [agents.id],
+  }),
+}));
+
+export const useCaseToolsRelations = relations(useCaseTools, ({ one }) => ({
+  useCase: one(useCases, {
+    fields: [useCaseTools.useCaseId],
+    references: [useCases.id],
+  }),
+  tool: one(tools, {
+    fields: [useCaseTools.toolId],
+    references: [tools.id],
   }),
 }));
 

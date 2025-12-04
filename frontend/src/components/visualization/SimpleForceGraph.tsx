@@ -14,6 +14,18 @@ export function SimpleForceGraph({ nodes, edges, onNodeClick }: SimpleForceGraph
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
 
+    // Validate edges reference existing nodes
+    const nodeIds = new Set(nodes.map(n => n.id));
+    const validEdges = edges.filter(edge => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : (edge.source as any)?.id;
+      const targetId = typeof edge.target === 'string' ? edge.target : (edge.target as any)?.id;
+      const isValid = nodeIds.has(sourceId) && nodeIds.has(targetId);
+      if (!isValid) {
+        console.warn('Skipping invalid edge:', { source: sourceId, target: targetId });
+      }
+      return isValid;
+    });
+
     const svg = d3.select(svgRef.current);
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
@@ -48,7 +60,7 @@ export function SimpleForceGraph({ nodes, edges, onNodeClick }: SimpleForceGraph
       .forceSimulation(nodes as any)
       .force(
         'link',
-        d3.forceLink(edges).id((d: any) => d.id).distance(100)
+        d3.forceLink(validEdges).id((d: any) => d.id).distance(100)
       )
       .force('charge', d3.forceManyBody().strength(-300))
       .force('center', d3.forceCenter(width / 2, height / 2))
@@ -58,7 +70,7 @@ export function SimpleForceGraph({ nodes, edges, onNodeClick }: SimpleForceGraph
     const link = g
       .append('g')
       .selectAll('line')
-      .data(edges)
+      .data(validEdges)
       .join('line')
       .attr('stroke', (d) => (d.isCritical ? '#EF4444' : '#D1D5DB'))
       .attr('stroke-width', (d) => (d.isCritical ? 2 : 1))

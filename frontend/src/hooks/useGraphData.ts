@@ -92,15 +92,28 @@ export function useGraphData() {
       }
     });
 
-    // Add bridge edges
+    // Add bridge edges (only if both nodes exist)
+    const nodeIds = new Set(nodes.map(n => n.id));
     bridges.forEach((bridge: any) => {
-      edges.push({
-        source: bridge.sourceSubdomainId,
-        target: bridge.targetSubdomainId,
-        type: bridge.bridgeType || 'bridge',
-        strength: bridge.strength,
-        isCritical: bridge.isCritical,
-      });
+      // Only add edge if both source and target nodes exist
+      if (nodeIds.has(bridge.sourceSubdomainId) && nodeIds.has(bridge.targetSubdomainId)) {
+        edges.push({
+          source: bridge.sourceSubdomainId,
+          target: bridge.targetSubdomainId,
+          type: bridge.bridgeType || 'bridge',
+          strength: bridge.strength,
+          isCritical: bridge.isCritical,
+        });
+      } else {
+        // Log for debugging but don't break the graph
+        console.warn('Bridge references non-existent node:', {
+          bridge: bridge.id,
+          source: bridge.sourceSubdomainId,
+          target: bridge.targetSubdomainId,
+          sourceExists: nodeIds.has(bridge.sourceSubdomainId),
+          targetExists: nodeIds.has(bridge.targetSubdomainId),
+        });
+      }
     });
 
     return { nodes, edges };
