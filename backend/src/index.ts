@@ -7,11 +7,13 @@ import path from 'path';
 
 // Import routes
 import domainsRouter from './routes/domains';
+import subdomainsRouter from './routes/subdomains';
 import mcpsRouter from './routes/mcps';
 import agentsRouter from './routes/agents';
 import workflowsRouter from './routes/workflows';
 import toolsRouter from './routes/tools';
 import crossDomainRouter from './routes/cross-domain';
+import statsRouter from './routes/stats';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -38,11 +40,13 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/domains', domainsRouter);
+app.use('/api/subdomains', subdomainsRouter);
 app.use('/api/mcps', mcpsRouter);
 app.use('/api/agents', agentsRouter);
 app.use('/api/workflows', workflowsRouter);
 app.use('/api/tools', toolsRouter);
 app.use('/api/cross-domain', crossDomainRouter);
+app.use('/api/stats', statsRouter);
 
 // Root endpoint - API info in development, serve frontend in production
 if (!isProduction) {

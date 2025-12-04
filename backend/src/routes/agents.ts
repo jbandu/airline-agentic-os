@@ -156,6 +156,76 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// GET /api/agents/network - Get full agent network for visualization
+router.get('/network', async (req, res) => {
+  try {
+    const allAgents = await db.query.agents.findMany({
+      with: {
+        category: true,
+        mcp: {
+          with: {
+            subdomain: {
+              with: {
+                domain: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const allCollaborations = await db.query.agentCollaborations.findMany({
+      with: {
+        sourceAgent: {
+          with: {
+            category: true,
+          },
+        },
+        targetAgent: {
+          with: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    // Format for network visualization
+    const nodes = allAgents.map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      code: agent.code,
+      category: agent.category.code,
+      categoryName: agent.category.name,
+      categoryColor: agent.category.color,
+      categoryIcon: agent.category.icon,
+      autonomyLevel: agent.autonomyLevel,
+      domain: agent.mcp?.subdomain?.domain?.name,
+      subdomain: agent.mcp?.subdomain?.name,
+      active: agent.active,
+    }));
+
+    const edges = allCollaborations.map((collab) => ({
+      id: collab.id,
+      source: collab.sourceAgentId,
+      target: collab.targetAgentId,
+      type: collab.collaborationType,
+      strength: collab.strength,
+      bidirectional: collab.bidirectional,
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        nodes,
+        edges,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching agent network:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch agent network' });
+  }
+});
+
 // Agent Categories routes
 // GET /api/agents/categories - Get all agent categories
 router.get('/categories/all', async (req, res) => {
