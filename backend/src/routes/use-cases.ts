@@ -369,6 +369,95 @@ router.get('/:id/roi', async (req, res) => {
   }
 });
 
+// GET /api/use-cases/:id/automation-analysis - Analyze automation potential
+router.get('/:id/automation-analysis', async (req, res) => {
+  try {
+    const useCase = await db.query.useCases.findFirst({
+      where: eq(useCases.id, req.params.id),
+      with: {
+        steps: {
+          orderBy: (steps, { asc }) => [asc(steps.stepNumber)],
+        },
+      },
+    });
+
+    if (!useCase) {
+      return res.status(404).json({ error: 'Use case not found' });
+    }
+
+    const steps = useCase.steps || [];
+    const totalSteps = steps.length;
+    const automatableSteps = steps.filter((step) => step.canAutomate).length;
+    const errorProneSteps = steps.filter((step) => step.errorProne).length;
+
+    // Calculate time savings
+    const currentTotalSeconds = steps.reduce(
+      (sum, step) => sum + (step.currentDurationSeconds || 0),
+      0
+    );
+    const targetTotalSeconds = steps.reduce(
+      (sum, step) => sum + (step.targetDurationSeconds || 0),
+      0
+    );
+    const timeSavingsSeconds = currentTotalSeconds - targetTotalSeconds;
+    const timeSavingsPercentage =
+      currentTotalSeconds > 0
+        ? ((timeSavingsSeconds / currentTotalSeconds) * 100).toFixed(1)
+        : '0';
+
+    // Calculate automation percentage
+    const automationPercentage =
+      totalSteps > 0 ? ((automatableSteps / totalSteps) * 100).toFixed(1) : '0';
+
+    // Calculate error reduction potential
+    const errorReductionPercentage =
+      totalSteps > 0 ? ((errorProneSteps / totalSteps) * 100).toFixed(1) : '0';
+
+    // Complexity analysis
+    const complexityScore = useCase.complexity || 1;
+    const complexityReduction = automatableSteps > 0 ? 'high' : 'low';
+
+    // Calculate annual time savings
+    const annualOccurrences = useCase.estimatedAnnualOccurrences || 0;
+    const annualTimeSavingsHours = (timeSavingsSeconds * annualOccurrences) / 3600;
+
+    res.json({
+      useCaseId: useCase.id,
+      useCaseName: useCase.name,
+      analysis: {
+        totalSteps,
+        automatableSteps,
+        automationPercentage: `${automationPercentage}%`,
+        errorProneSteps,
+        errorReductionPercentage: `${errorReductionPercentage}%`,
+        complexityScore,
+        complexityReduction,
+      },
+      timeSavings: {
+        currentTotalSeconds,
+        targetTotalSeconds,
+        savingsSeconds: timeSavingsSeconds,
+        savingsMinutes: (timeSavingsSeconds / 60).toFixed(1),
+        savingsPercentage: `${timeSavingsPercentage}%`,
+        annualTimeSavingsHours: annualTimeSavingsHours.toFixed(1),
+      },
+      stepBreakdown: steps.map((step) => ({
+        stepNumber: step.stepNumber,
+        name: step.name,
+        canAutomate: step.canAutomate,
+        errorProne: step.errorProne,
+        currentDuration: step.currentDurationSeconds,
+        targetDuration: step.targetDurationSeconds,
+        actionType: step.actionType,
+        automationNotes: step.automationNotes,
+      })),
+    });
+  } catch (error) {
+    console.error('Error analyzing automation potential:', error);
+    res.status(500).json({ error: 'Failed to analyze automation potential' });
+  }
+});
+
 // Use Case Steps routes
 // GET /api/use-cases/:id/steps - Get all steps for a use case
 router.get('/:id/steps', async (req, res) => {
