@@ -11,22 +11,28 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
-        <p className="text-gray-500">Loading graph data...</p>
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center min-h-[500px] flex items-center justify-center">
+        <div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading graph data...</p>
+        </div>
       </div>
     );
   }
 
-  if (data.nodes.length === 0) {
+  if (!data || data.nodes.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          The ecosystem graph is empty. Add domains, subdomains, and MCPs to see the visualization.
-        </p>
-        <p className="text-xs text-gray-400">
-          Hint: Use the navigation menu to create your first domain.
-        </p>
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center min-h-[500px] flex items-center justify-center">
+        <div>
+          <div className="text-6xl mb-4">📊</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            The ecosystem graph is empty. The database has been seeded, but the graph may need time to load.
+          </p>
+          <p className="text-xs text-gray-400">
+            Try refreshing the page, or check the browser console for errors.
+          </p>
+        </div>
       </div>
     );
   }
@@ -39,12 +45,14 @@ export function GraphContainer({ onNodeClick }: GraphContainerProps) {
           {data.nodes.length} nodes, {data.edges.length} connections
         </p>
       </div>
-      <SimpleForceGraph
-        nodes={data.nodes}
-        edges={data.edges}
-        onNodeClick={onNodeClick}
-      />
-      <div className="mt-4 flex gap-4 text-xs">
+      <div className="w-full" style={{ height: '600px' }}>
+        <SimpleForceGraph
+          nodes={data.nodes}
+          edges={data.edges}
+          onNodeClick={onNodeClick}
+        />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-4 text-xs">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full bg-blue-500"></div>
           <span>Domains</span>
