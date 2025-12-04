@@ -180,6 +180,58 @@ export function useDeleteMCP() {
 }
 
 // ============================================================================
+// AGENTS
+// ============================================================================
+
+export function useAgents() {
+  return useQuery({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      const response = await api.getAgents();
+      return response.data || [];
+    },
+  });
+}
+
+export function useAgent(id: string | undefined) {
+  return useQuery({
+    queryKey: ['agents', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await api.getAgent(id);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
+// ============================================================================
+// WORKFLOWS
+// ============================================================================
+
+export function useWorkflows() {
+  return useQuery({
+    queryKey: ['workflows'],
+    queryFn: async () => {
+      const response = await api.getWorkflows();
+      return response.data || [];
+    },
+  });
+}
+
+export function useWorkflow(id: string | undefined) {
+  return useQuery({
+    queryKey: ['workflows', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const response = await api.getWorkflow(id);
+      return response.data;
+    },
+    enabled: !!id,
+  });
+}
+
+// ============================================================================
 // CROSS-DOMAIN BRIDGES
 // ============================================================================
 

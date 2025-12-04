@@ -1,6 +1,20 @@
+import { useAgents } from '../hooks/useEntities';
+
 export function Agents() {
-  // TODO: Implement agents API endpoints and hooks
-  const agents: any[] = [];
+  const { data: agents, isLoading } = useAgents();
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Agents</h1>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-gray-500">Loading agents...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -11,7 +25,7 @@ export function Agents() {
         </p>
       </div>
 
-      {agents.length === 0 ? (
+      {!agents || agents.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">No agents configured yet.</p>
           <p className="text-sm text-gray-400 mt-2">Agent management coming soon.</p>

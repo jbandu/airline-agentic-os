@@ -1,3 +1,5 @@
+import { useWorkflows } from '../hooks/useEntities';
+
 const statusColors = {
   draft: 'bg-gray-100 text-gray-800',
   planned: 'bg-blue-100 text-blue-800',
@@ -6,8 +8,20 @@ const statusColors = {
 };
 
 export function Workflows() {
-  // TODO: Implement workflows API endpoints and hooks
-  const workflows: any[] = [];
+  const { data: workflows, isLoading } = useWorkflows();
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Workflows</h1>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-gray-500">Loading workflows...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -18,7 +32,7 @@ export function Workflows() {
         </p>
       </div>
 
-      {workflows.length === 0 ? (
+      {!workflows || workflows.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">No workflows configured yet.</p>
           <p className="text-sm text-gray-400 mt-2">Workflow management coming soon.</p>

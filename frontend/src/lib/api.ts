@@ -131,6 +131,24 @@ class ApiClient {
     });
   }
 
+  // Agents
+  async getAgents() {
+    return this.fetch<ApiResponse<any[]>>('/agents');
+  }
+
+  async getAgent(id: string) {
+    return this.fetch<ApiResponse<any>>(`/agents/${id}`);
+  }
+
+  // Workflows
+  async getWorkflows() {
+    return this.fetch<ApiResponse<any[]>>('/workflows');
+  }
+
+  async getWorkflow(id: string) {
+    return this.fetch<ApiResponse<any>>(`/workflows/${id}`);
+  }
+
   // Research
   async conductResearch(params: ResearchParams) {
     return this.fetch<ResearchResult>('/research/conduct', {

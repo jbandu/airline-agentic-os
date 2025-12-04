@@ -804,4 +804,297 @@ router.delete('/:id/tools/:toolId', async (req, res) => {
   }
 });
 
+// ============================================================================
+// AI-POWERED FEATURES (Phase 6C Wave 2)
+// ============================================================================
+
+// POST /api/use-cases/ai/suggest-from-pain-points - Generate use case suggestions from persona pain points
+router.post('/ai/suggest-from-pain-points', async (req, res) => {
+  try {
+    const { personaId, painPoints, subdomain } = req.body;
+
+    if (!personaId || !painPoints || painPoints.length === 0) {
+      return res.status(400).json({
+        error: 'personaId and painPoints array are required',
+      });
+    }
+
+    // Get persona details for context
+    const persona = await db.query.personas.findFirst({
+      where: eq(useCases.id, personaId),
+    });
+
+    if (!persona) {
+      return res.status(404).json({ error: 'Persona not found' });
+    }
+
+    // Generate AI suggestions (simplified - in production would call Claude API)
+    const suggestions = painPoints.map((painPoint: string, index: number) => {
+      // Extract key concepts from pain point
+      const isTimeRelated = /time|hour|minute|slow|wait|delay/i.test(painPoint);
+      const isDataRelated = /data|information|system|view|access/i.test(painPoint);
+      const isManualRelated = /manual|call|check|enter|type/i.test(painPoint);
+
+      let category = 'operational';
+      if (/compliance|regulation|rule/i.test(painPoint)) category = 'compliance';
+      if (/communicate|notification|alert/i.test(painPoint)) category = 'communication';
+      if (/exception|problem|issue|error/i.test(painPoint)) category = 'exception_handling';
+
+      const complexity = isManualRelated ? 3 : isDataRelated ? 2 : 1;
+      const agenticPotential = isManualRelated || isDataRelated ? 8 : 5;
+
+      return {
+        name: `Automate ${painPoint.split('.')[0].substring(0, 50)}`,
+        code: `UC-${persona.code}-${String(index + 1).padStart(3, '0')}`,
+        description: `Address pain point: ${painPoint}`,
+        category,
+        frequency: isTimeRelated ? 'daily' : 'weekly',
+        businessImpact: isTimeRelated || isManualRelated ? 'high' : 'medium',
+        complexity,
+        agenticPotential,
+        priority: isTimeRelated || isManualRelated ? 9 : 7,
+        timePressure: isTimeRelated ? 'urgent' : 'standard',
+        estimatedAnnualOccurrences: isTimeRelated ? 250 : 52,
+        currentTimeMinutes: isTimeRelated ? 45 : 30,
+        proposedTimeMinutes: isTimeRelated ? 10 : 15,
+        currentSuccessRate: 0.85,
+        proposedSuccessRate: 0.98,
+        painPointAddressed: painPoint,
+        aiGenerated: true,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        personaId,
+        personaName: persona.name,
+        suggestions,
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error generating use case suggestions:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate use case suggestions' });
+  }
+});
+
+// POST /api/use-cases/ai/enhance - Enhance a use case with AI-generated details
+router.post('/ai/enhance', async (req, res) => {
+  try {
+    const { useCaseId, enhanceFields } = req.body;
+
+    if (!useCaseId) {
+      return res.status(400).json({ error: 'useCaseId is required' });
+    }
+
+    const useCase = await db.query.useCases.findFirst({
+      where: eq(useCases.id, useCaseId),
+    });
+
+    if (!useCase) {
+      return res.status(404).json({ error: 'Use case not found' });
+    }
+
+    // AI-enhanced fields (simplified - would use Claude API in production)
+    const enhancements: any = {};
+
+    if (!enhanceFields || enhanceFields.includes('successMetrics')) {
+      enhancements.successMetrics = {
+        timeReduction: '70% reduction in processing time',
+        errorReduction: '90% reduction in manual errors',
+        userSatisfaction: 'NPS score improvement from 45 to 85',
+        costSavings: '$47K annual savings',
+      };
+    }
+
+    if (!enhanceFields || enhanceFields.includes('systemsInvolved')) {
+      enhancements.systemsInvolved = [
+        'Crew Management System',
+        'Flight Operations System',
+        'Crew Scheduling Database',
+        'Notification Service',
+      ];
+    }
+
+    if (!enhanceFields || enhanceFields.includes('aiEnablers')) {
+      enhancements.aiEnablers = [
+        'Natural Language Processing for crew availability',
+        'Predictive Analytics for schedule conflicts',
+        'Automated notification system',
+        'Rule-based decision engine for crew assignment',
+      ];
+    }
+
+    if (!enhanceFields || enhanceFields.includes('implementationNotes')) {
+      enhancements.implementationNotes = `
+This use case is well-suited for AI automation with high ROI potential.
+
+Key Implementation Steps:
+1. Integrate with crew management APIs
+2. Build NLP model for crew queries
+3. Implement decision engine for assignments
+4. Create automated notification workflows
+5. Add audit logging and compliance tracking
+
+Estimated Timeline: 8-12 weeks
+Required Resources: 1 AI Engineer, 1 Backend Developer, 1 QA Engineer
+      `.trim();
+    }
+
+    res.json({
+      success: true,
+      data: {
+        useCaseId,
+        useCaseName: useCase.name,
+        enhancements,
+        enhancedFields: Object.keys(enhancements),
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error enhancing use case:', error);
+    res.status(500).json({ success: false, error: 'Failed to enhance use case' });
+  }
+});
+
+// POST /api/use-cases/ai/suggest-steps - Generate AI-suggested process steps
+router.post('/ai/suggest-steps', async (req, res) => {
+  try {
+    const { useCaseId, useCaseName, useCaseDescription } = req.body;
+
+    if (!useCaseId && !useCaseName) {
+      return res.status(400).json({
+        error: 'Either useCaseId or useCaseName is required',
+      });
+    }
+
+    let useCase;
+    if (useCaseId) {
+      useCase = await db.query.useCases.findFirst({
+        where: eq(useCases.id, useCaseId),
+      });
+
+      if (!useCase) {
+        return res.status(404).json({ error: 'Use case not found' });
+      }
+    }
+
+    const name = useCaseName || useCase?.name;
+    const description = useCaseDescription || useCase?.description;
+
+    // Generate AI step suggestions (simplified - would use Claude API)
+    const suggestedSteps = [
+      {
+        stepNumber: 1,
+        name: 'Receive notification',
+        description: 'System receives crew unavailability notification',
+        actor: 'system',
+        actionType: 'notification',
+        currentDurationSeconds: 30,
+        targetDurationSeconds: 5,
+        canAutomate: true,
+        automationNotes: 'Automated notification intake via API',
+        errorProne: false,
+        systemsInvolved: ['Crew Management System'],
+        dataNeeded: ['Crew ID', 'Flight Number', 'Date', 'Reason'],
+      },
+      {
+        stepNumber: 2,
+        name: 'Verify crew unavailability',
+        description: 'Verify the crew member status and flight assignment',
+        actor: 'human_with_agent',
+        actionType: 'data_lookup',
+        currentDurationSeconds: 180,
+        targetDurationSeconds: 10,
+        canAutomate: true,
+        automationNotes: 'Agent queries crew database and validates data',
+        errorProne: false,
+        systemsInvolved: ['Crew Database', 'Flight Operations System'],
+        dataNeeded: ['Crew qualifications', 'Current assignments'],
+      },
+      {
+        stepNumber: 3,
+        name: 'Find eligible replacements',
+        description: 'Search for qualified crew members available for the flight',
+        actor: 'agent',
+        actionType: 'data_lookup',
+        currentDurationSeconds: 900,
+        targetDurationSeconds: 30,
+        canAutomate: true,
+        automationNotes: 'AI-powered search with qualification matching',
+        errorProne: true,
+        errorNotes: 'Manual search often misses qualified crew',
+        systemsInvolved: ['Crew Database', 'Qualification System'],
+        dataNeeded: ['Crew qualifications', 'Availability', 'Location', 'Rest requirements'],
+        dataProduced: ['List of eligible crew with rankings'],
+      },
+      {
+        stepNumber: 4,
+        name: 'Select best replacement',
+        description: 'Review options and select optimal crew member',
+        actor: 'human_with_agent',
+        actionType: 'decision',
+        currentDurationSeconds: 300,
+        targetDurationSeconds: 60,
+        canAutomate: false,
+        automationNotes: 'Agent provides ranked recommendations, human makes final decision',
+        errorProne: false,
+        decisionCriteria: ['Qualifications', 'Proximity', 'Rest compliance', 'Cost'],
+      },
+      {
+        stepNumber: 5,
+        name: 'Notify selected crew',
+        description: 'Contact selected crew member and await confirmation',
+        actor: 'agent',
+        actionType: 'communication',
+        currentDurationSeconds: 600,
+        targetDurationSeconds: 120,
+        canAutomate: true,
+        automationNotes: 'Automated notification via SMS/email with auto-acknowledgment',
+        errorProne: true,
+        errorNotes: 'Manual calls time-consuming and error-prone',
+        systemsInvolved: ['Notification Service', 'Crew Mobile App'],
+        dataNeeded: ['Crew contact info', 'Flight details'],
+      },
+      {
+        stepNumber: 6,
+        name: 'Update crew assignments',
+        description: 'Update flight crew roster in all systems',
+        actor: 'system',
+        actionType: 'data_entry',
+        currentDurationSeconds: 180,
+        targetDurationSeconds: 10,
+        canAutomate: true,
+        automationNotes: 'Automated system updates across all platforms',
+        errorProne: true,
+        errorNotes: 'Manual entry across multiple systems error-prone',
+        systemsInvolved: ['Crew Management System', 'Flight Operations', 'Payroll'],
+        dataProduced: ['Updated crew roster', 'Audit log entry'],
+      },
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        useCaseId,
+        useCaseName: name,
+        useCaseDescription: description,
+        suggestedSteps,
+        summary: {
+          totalSteps: suggestedSteps.length,
+          automatableSteps: suggestedSteps.filter((s) => s.canAutomate).length,
+          errorProneSteps: suggestedSteps.filter((s) => s.errorProne).length,
+          totalCurrentTime: suggestedSteps.reduce((sum, s) => sum + s.currentDurationSeconds, 0),
+          totalTargetTime: suggestedSteps.reduce((sum, s) => sum + s.targetDurationSeconds, 0),
+        },
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error generating step suggestions:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate step suggestions' });
+  }
+});
+
 export default router;
