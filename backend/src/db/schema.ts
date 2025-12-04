@@ -4,9 +4,12 @@ import { relations } from 'drizzle-orm';
 // Enums
 export const mcpStatusEnum = pgEnum('mcp_status', ['built', 'in-progress', 'planned']);
 export const toolStatusEnum = pgEnum('tool_status', ['built', 'in-progress', 'planned']);
-export const workflowStatusEnum = pgEnum('workflow_status', ['draft', 'planned', 'in-progress', 'completed']);
-export const bridgeTypeEnum = pgEnum('bridge_type', ['data_flow', 'process_handoff', 'shared_resource', 'dependency']);
-export const dependencyTypeEnum = pgEnum('dependency_type', ['requires', 'enhances', 'feeds_data']);
+export const workflowStatusEnum = pgEnum('workflow_status', ['draft', 'planned', 'in-progress', 'completed', 'archived']);
+export const bridgeTypeEnum = pgEnum('bridge_type', ['data_flow', 'process_handoff', 'shared_resource', 'dependency', 'regulatory']);
+export const dependencyTypeEnum = pgEnum('dependency_type', ['requires', 'enhances', 'feeds_data', 'optional']);
+export const auditActionEnum = pgEnum('audit_action', ['create', 'update', 'delete', 'status_change', 'research_add']);
+export const researchTypeEnum = pgEnum('research_type', ['mcps', 'agents', 'workflows', 'tools', 'bridges', 'comprehensive']);
+export const suggestionStatusEnum = pgEnum('suggestion_status', ['pending', 'accepted', 'rejected', 'modified']);
 
 // 1. Domains
 export const domains = pgTable('domains', {
@@ -312,5 +315,83 @@ export const mcpDependenciesRelations = relations(mcpDependencies, ({ one }) => 
     fields: [mcpDependencies.targetMcpId],
     references: [mcps.id],
     relationName: 'targetDependencies',
+  }),
+}));
+
+// 13. Audit Log
+export const auditLog = pgTable('audit_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  entityType: text('entity_type').notNull(),
+  entityId: uuid('entity_id').notNull(),
+  entityName: text('entity_name'),
+  action: auditActionEnum('action').notNull(),
+  actor: text('actor').notNull(),
+  reason: text('reason'),
+  previousState: jsonb('previous_state'),
+  newState: jsonb('new_state'),
+  dependencyContext: jsonb('dependency_context'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  entityTypeIdIdx: index('audit_log_entity_type_id_idx').on(table.entityType, table.entityId),
+  createdAtIdx: index('audit_log_created_at_idx').on(table.createdAt),
+  actorIdx: index('audit_log_actor_idx').on(table.actor),
+}));
+
+// 14. Research Sessions
+export const researchSessions = pgTable('research_sessions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  domainId: uuid('domain_id').references(() => domains.id, { onDelete: 'set null' }),
+  subdomainId: uuid('subdomain_id').references(() => subdomains.id, { onDelete: 'set null' }),
+  researchType: researchTypeEnum('research_type').notNull(),
+  promptContext: jsonb('prompt_context'),
+  responseRaw: jsonb('response_raw'),
+  suggestionsCount: integer('suggestions_count').notNull().default(0),
+  acceptedCount: integer('accepted_count').notNull().default(0),
+  rejectedCount: integer('rejected_count').notNull().default(0),
+  actor: text('actor').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  domainIdIdx: index('research_sessions_domain_id_idx').on(table.domainId),
+  subdomainIdIdx: index('research_sessions_subdomain_id_idx').on(table.subdomainId),
+  createdAtIdx: index('research_sessions_created_at_idx').on(table.createdAt),
+}));
+
+// 15. Research Suggestions
+export const researchSuggestions = pgTable('research_suggestions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id').notNull().references(() => researchSessions.id, { onDelete: 'cascade' }),
+  suggestionType: text('suggestion_type').notNull(),
+  suggestedData: jsonb('suggested_data').notNull(),
+  status: suggestionStatusEnum('status').notNull().default('pending'),
+  modificationNotes: text('modification_notes'),
+  acceptedEntityId: uuid('accepted_entity_id'),
+  reviewedBy: text('reviewed_by'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  sessionIdIdx: index('research_suggestions_session_id_idx').on(table.sessionId),
+  statusIdx: index('research_suggestions_status_idx').on(table.status),
+}));
+
+// Relations for new tables
+export const auditLogRelations = relations(auditLog, () => ({}));
+
+export const researchSessionsRelations = relations(researchSessions, ({ one, many }) => ({
+  domain: one(domains, {
+    fields: [researchSessions.domainId],
+    references: [domains.id],
+  }),
+  subdomain: one(subdomains, {
+    fields: [researchSessions.subdomainId],
+    references: [subdomains.id],
+  }),
+  suggestions: many(researchSuggestions),
+}));
+
+export const researchSuggestionsRelations = relations(researchSuggestions, ({ one }) => ({
+  session: one(researchSessions, {
+    fields: [researchSuggestions.sessionId],
+    references: [researchSessions.id],
   }),
 }));
