@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { useCases, useCaseSteps, useCaseWorkflows, useCaseAgents, useCaseTools } from '../db/schema';
+import { useCases, useCaseSteps, useCaseWorkflows, useCaseAgents, useCaseTools, personas } from '../db/schema';
 import { eq, and, gte, lte, inArray } from 'drizzle-orm';
 
 const router = Router();
@@ -821,7 +821,7 @@ router.post('/ai/suggest-from-pain-points', async (req, res) => {
 
     // Get persona details for context
     const persona = await db.query.personas.findFirst({
-      where: eq(useCases.id, personaId),
+      where: eq(personas.id, personaId),
     });
 
     if (!persona) {
