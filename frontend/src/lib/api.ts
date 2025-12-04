@@ -1,56 +1,180 @@
-import axios from 'axios';
+import type {
+  Domain,
+  Subdomain,
+  MCP,
+  Tool,
+  Agent,
+  Workflow,
+  CrossDomainBridge,
+  ApiResponse,
+  PaginatedResponse,
+  CreateDomainInput,
+  UpdateDomainInput,
+  CreateMCPInput,
+  UpdateMCPInput,
+  CreateToolInput,
+  CreateAgentInput,
+  CreateWorkflowInput,
+  MCPFilters,
+  AgentFilters,
+  OverviewStats,
+  BuildProgress,
+  ResearchParams,
+  ResearchResult,
+  Suggestion,
+  AuditLog,
+  AuditFilters,
+  DependencyCheckResult,
+} from '../types';
 
-// In production, API is served from the same origin
-// In development, use VITE_API_URL or localhost
-const API_BASE_URL = import.meta.env.PROD
-  ? '' // Same origin in production
-  : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public data: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
-// API functions
-export const domainsApi = {
-  getAll: () => api.get('/api/domains'),
-  getById: (id: string) => api.get(`/api/domains/${id}`),
-  create: (data: any) => api.post('/api/domains', data),
-  update: (id: string, data: any) => api.put(`/api/domains/${id}`, data),
-  delete: (id: string) => api.delete(`/api/domains/${id}`),
-};
+class ApiClient {
+  private actor: string = 'team@numberlabs.ai';
 
-export const mcpsApi = {
-  getAll: () => api.get('/api/mcps'),
-  getById: (id: string) => api.get(`/api/mcps/${id}`),
-  create: (data: any) => api.post('/api/mcps', data),
-  update: (id: string, data: any) => api.put(`/api/mcps/${id}`, data),
-  delete: (id: string) => api.delete(`/api/mcps/${id}`),
-};
+  setActor(actor: string) {
+    this.actor = actor;
+  }
 
-export const agentsApi = {
-  getAll: () => api.get('/api/agents'),
-  getById: (id: string) => api.get(`/api/agents/${id}`),
-  create: (data: any) => api.post('/api/agents', data),
-  update: (id: string, data: any) => api.put(`/api/agents/${id}`, data),
-  delete: (id: string) => api.delete(`/api/agents/${id}`),
-  getCategories: () => api.get('/api/agents/categories/all'),
-};
+  private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Actor': this.actor,
+        ...options?.headers,
+      },
+    });
 
-export const workflowsApi = {
-  getAll: () => api.get('/api/workflows'),
-  getById: (id: string) => api.get(`/api/workflows/${id}`),
-  create: (data: any) => api.post('/api/workflows', data),
-  update: (id: string, data: any) => api.put(`/api/workflows/${id}`, data),
-  delete: (id: string) => api.delete(`/api/workflows/${id}`),
-};
+    const data = await response.json();
 
-export const toolsApi = {
-  getAll: () => api.get('/api/tools'),
-  getById: (id: string) => api.get(`/api/tools/${id}`),
-  create: (data: any) => api.post('/api/tools', data),
-  update: (id: string, data: any) => api.put(`/api/tools/${id}`, data),
-  delete: (id: string) => api.delete(`/api/tools/${id}`),
-};
+    if (!response.ok) {
+      throw new ApiError(data.error || 'Request failed', response.status, data);
+    }
+
+    return data;
+  }
+
+  // Domains
+  async getDomains() {
+    return this.fetch<ApiResponse<Domain[]>>('/domains');
+  }
+
+  async getDomain(id: string) {
+    return this.fetch<ApiResponse<Domain>>(`/domains/${id}`);
+  }
+
+  async createDomain(data: CreateDomainInput) {
+    return this.fetch<ApiResponse<Domain>>('/domains', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateDomain(id: string, data: UpdateDomainInput) {
+    return this.fetch<ApiResponse<Domain>>(`/domains/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteDomain(id: string, reason?: string) {
+    return this.fetch<ApiResponse<void>>(`/domains/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  // MCPs
+  async getMCPs(filters?: MCPFilters) {
+    const params = new URLSearchParams(filters as any);
+    return this.fetch<PaginatedResponse<MCP>>(`/mcps?${params}`);
+  }
+
+  async getMCP(id: string) {
+    return this.fetch<ApiResponse<MCP>>(`/mcps/${id}`);
+  }
+
+  async createMCP(data: CreateMCPInput) {
+    return this.fetch<ApiResponse<MCP>>('/mcps', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMCP(id: string, data: UpdateMCPInput) {
+    return this.fetch<ApiResponse<MCP>>(`/mcps/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteMCP(id: string, reason?: string) {
+    return this.fetch<ApiResponse<void>>(`/mcps/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  // Research
+  async conductResearch(params: ResearchParams) {
+    return this.fetch<ResearchResult>('/research/conduct', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
+  async acceptSuggestion(id: string, modifications?: any) {
+    return this.fetch<ApiResponse<any>>(`/research/suggestions/${id}/accept`, {
+      method: 'POST',
+      body: JSON.stringify({ modifications }),
+    });
+  }
+
+  async rejectSuggestion(id: string, reason: string) {
+    return this.fetch<ApiResponse<void>>(`/research/suggestions/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async explainBlock(checkResult: DependencyCheckResult) {
+    return this.fetch<ApiResponse<{ explanation: string }>>('/research/explain-block', {
+      method: 'POST',
+      body: JSON.stringify({ checkResult }),
+    });
+  }
+
+  // Stats
+  async getOverviewStats() {
+    return this.fetch<ApiResponse<OverviewStats>>('/stats/overview');
+  }
+
+  async getBuildProgress() {
+    return this.fetch<ApiResponse<BuildProgress>>('/stats/build-progress');
+  }
+
+  // Audit
+  async getAuditLogs(filters?: AuditFilters) {
+    const params = new URLSearchParams(filters as any);
+    return this.fetch<PaginatedResponse<AuditLog>>(`/audit?${params}`);
+  }
+
+  async getEntityHistory(entityType: string, entityId: string) {
+    return this.fetch<ApiResponse<AuditLog[]>>(`/audit/entity/${entityType}/${entityId}`);
+  }
+}
+
+export const api = new ApiClient();
+export { ApiError };
