@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// Load environment variables FIRST using CommonJS require
+require('dotenv').config();
 
 import { db } from './index';
 import {
