@@ -16,7 +16,9 @@
     "db:migrate": "npm run db:migrate -w backend",
     "db:push": "npm run db:push -w backend",
     "db:seed": "npm run db:seed -w backend",
-    "db:studio": "npm run db:studio -w backend"
+    "db:studio": "npm run db:studio -w backend",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

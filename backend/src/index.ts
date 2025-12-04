@@ -1,6 +1,8 @@
+// Load environment variables FIRST - this MUST be the first import
+import './env';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 
 // Import routes
 import domainsRouter from './routes/domains';
@@ -9,9 +11,6 @@ import agentsRouter from './routes/agents';
 import workflowsRouter from './routes/workflows';
 import toolsRouter from './routes/tools';
 import crossDomainRouter from './routes/cross-domain';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
