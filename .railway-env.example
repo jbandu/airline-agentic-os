@@ -1,14 +1,45 @@
 # Railway Environment Variables
 # Set these in your Railway service's Variables tab
 
-# Required: Database connection string (automatically provided if using Railway PostgreSQL)
+# =============================================================================
+# REQUIRED - Database Configuration
+# =============================================================================
+
+# PostgreSQL connection string (automatically provided if using Railway PostgreSQL)
 DATABASE_URL=postgresql://user:password@host:port/database
 
-# Required: Node environment (set to 'production' for Railway)
+# Neo4j connection details (use Neo4j Aura or Railway Neo4j template)
+NEO4J_URI=neo4j+s://your-instance.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your-neo4j-password
+
+# =============================================================================
+# REQUIRED - Claude AI Configuration
+# =============================================================================
+
+# Anthropic API key for Claude AI integration (get from https://console.anthropic.com/)
+ANTHROPIC_API_KEY=sk-ant-api03-xxx
+
+# =============================================================================
+# REQUIRED - Environment Configuration
+# =============================================================================
+
+# Node environment (set to 'production' for Railway)
 NODE_ENV=production
 
-# Optional: Port (Railway provides this automatically)
+# =============================================================================
+# OPTIONAL - Server Configuration
+# =============================================================================
+
+# Port (Railway provides this automatically, defaults to 3000)
 # PORT=3000
 
-# Optional: CORS origin (set to '*' or specific domain)
-# CORS_ORIGIN=*
+# CORS origin (set to '*' for development, or specific domain for production)
+# CORS_ORIGIN=https://yourdomain.com
+
+# =============================================================================
+# OPTIONAL - Logging & Monitoring
+# =============================================================================
+
+# Log level (error, warn, info, debug)
+# LOG_LEVEL=info

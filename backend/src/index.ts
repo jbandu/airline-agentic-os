@@ -36,8 +36,42 @@ if (isProduction) {
 }
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    services: {
+      api: 'operational',
+      database: 'unknown',
+      neo4j: 'unknown',
+    },
+  };
+
+  try {
+    // Check PostgreSQL connection
+    const { db } = await import('./db');
+    await db.execute('SELECT 1' as any);
+    health.services.database = 'operational';
+  } catch (error) {
+    health.services.database = 'error';
+    health.status = 'degraded';
+  }
+
+  try {
+    // Check Neo4j connection
+    const { getNeo4jDriver } = await import('./db/neo4j/connection');
+    const driver = await getNeo4jDriver();
+    const session = driver.session();
+    await session.run('RETURN 1');
+    await session.close();
+    health.services.neo4j = 'operational';
+  } catch (error) {
+    health.services.neo4j = 'error';
+    health.status = 'degraded';
+  }
+
+  const statusCode = health.status === 'ok' ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 // API Routes
