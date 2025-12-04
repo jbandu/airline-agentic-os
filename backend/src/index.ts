@@ -14,6 +14,8 @@ import workflowsRouter from './routes/workflows';
 import toolsRouter from './routes/tools';
 import crossDomainRouter from './routes/cross-domain';
 import statsRouter from './routes/stats';
+import dependenciesRouter from './routes/dependencies';
+import auditRouter from './routes/audit';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -47,6 +49,8 @@ app.use('/api/workflows', workflowsRouter);
 app.use('/api/tools', toolsRouter);
 app.use('/api/cross-domain', crossDomainRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/dependencies', dependenciesRouter);
+app.use('/api/audit', auditRouter);
 
 // Root endpoint - API info in development, serve frontend in production
 if (!isProduction) {
@@ -62,6 +66,8 @@ if (!isProduction) {
         workflows: '/api/workflows',
         tools: '/api/tools',
         crossDomain: '/api/cross-domain',
+        dependencies: '/api/dependencies',
+        audit: '/api/audit',
       },
     });
   });
