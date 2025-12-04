@@ -1,0 +1,14 @@
+# Railway Environment Variables
+# Set these in your Railway service's Variables tab
+
+# Required: Database connection string (automatically provided if using Railway PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# Required: Node environment (set to 'production' for Railway)
+NODE_ENV=production
+
+# Optional: Port (Railway provides this automatically)
+# PORT=3000
+
+# Optional: CORS origin (set to '*' or specific domain)
+# CORS_ORIGIN=*

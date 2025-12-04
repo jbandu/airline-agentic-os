@@ -3,6 +3,7 @@ import './env';
 
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 
 // Import routes
 import domainsRouter from './routes/domains';
@@ -14,14 +15,21 @@ import crossDomainRouter from './routes/cross-domain';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || '*',
   credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from frontend build in production
+if (isProduction) {
+  const frontendBuildPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendBuildPath));
+}
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -36,27 +44,37 @@ app.use('/api/workflows', workflowsRouter);
 app.use('/api/tools', toolsRouter);
 app.use('/api/cross-domain', crossDomainRouter);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Airline Agentic OS API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      domains: '/api/domains',
-      mcps: '/api/mcps',
-      agents: '/api/agents',
-      workflows: '/api/workflows',
-      tools: '/api/tools',
-      crossDomain: '/api/cross-domain',
-    },
+// Root endpoint - API info in development, serve frontend in production
+if (!isProduction) {
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Airline Agentic OS API',
+      version: '1.0.0',
+      endpoints: {
+        health: '/health',
+        domains: '/api/domains',
+        mcps: '/api/mcps',
+        agents: '/api/agents',
+        workflows: '/api/workflows',
+        tools: '/api/tools',
+        crossDomain: '/api/cross-domain',
+      },
+    });
   });
-});
+}
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+// Serve frontend for all other routes in production (SPA support)
+if (isProduction) {
+  app.get('*', (req, res) => {
+    const frontendIndexPath = path.join(__dirname, '../../frontend/dist/index.html');
+    res.sendFile(frontendIndexPath);
+  });
+} else {
+  // 404 handler for development
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+  });
+}
 
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
