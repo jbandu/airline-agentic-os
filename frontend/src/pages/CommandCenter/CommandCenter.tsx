@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StatCard } from '../../components/stats/StatCard';
 import { BuildProgress } from '../../components/stats/BuildProgress';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { GraphContainer } from '../../components/visualization/GraphContainer';
 import { api } from '../../lib/api';
 
 interface OverviewStats {
@@ -48,6 +49,7 @@ export function CommandCenter() {
   const [domainStats, setDomainStats] = useState<DomainStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showVisualization, setShowVisualization] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -157,6 +159,27 @@ export function CommandCenter() {
             />
           </div>
         )}
+
+        {/* Ecosystem Visualization */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Ecosystem Visualization</h2>
+            <button
+              onClick={() => setShowVisualization(!showVisualization)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <span>{showVisualization ? '📊 Hide' : '🌐 Show'} Graph</span>
+            </button>
+          </div>
+          {showVisualization && (
+            <GraphContainer
+              onNodeClick={(node) => {
+                console.log('Node clicked:', node);
+                // Could navigate to detail page or show modal
+              }}
+            />
+          )}
+        </div>
 
         {/* Domain Overview */}
         <div className="mb-8">
