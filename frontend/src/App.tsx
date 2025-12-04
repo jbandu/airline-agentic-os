@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
+import { CommandCenter } from './pages/CommandCenter/CommandCenter';
 import { Dashboard } from './pages/Dashboard';
 import { Domains } from './pages/Domains';
 import { MCPs } from './pages/MCPs';
@@ -9,16 +11,20 @@ import { Workflows } from './pages/Workflows';
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="domains" element={<Domains />} />
-          <Route path="mcps" element={<MCPs />} />
-          <Route path="agents" element={<Agents />} />
-          <Route path="workflows" element={<Workflows />} />
-        </Route>
-      </Routes>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<CommandCenter />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/domains" element={<Domains />} />
+            <Route path="/mcps" element={<MCPs />} />
+            <Route path="/agents" element={<Agents />} />
+            <Route path="/workflows" element={<Workflows />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </BrowserRouter>
   );
 }
