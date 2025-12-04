@@ -21,6 +21,12 @@ export const useCaseStepActorEnum = pgEnum('use_case_step_actor', ['human', 'age
 export const useCaseStepActionTypeEnum = pgEnum('use_case_step_action_type', ['decision', 'data_entry', 'data_lookup', 'calculation', 'communication', 'validation', 'approval', 'notification']);
 export const useCaseCoverageEnum = pgEnum('use_case_coverage', ['full', 'partial', 'supporting']);
 
+// Phase 6C Wave 2: Certification System Enums
+export const certificationEntityTypeEnum = pgEnum('certification_entity_type', ['tool', 'mcp']);
+export const certificationTypeEnum = pgEnum('certification_type', ['security', 'compliance', 'performance', 'integration', 'data_privacy', 'accessibility']);
+export const certificationStatusEnum = pgEnum('certification_status', ['pending', 'in_progress', 'certified', 'expired', 'revoked', 'renewed']);
+export const certificationActionEnum = pgEnum('certification_action', ['created', 'updated', 'status_changed', 'renewed', 'revoked', 'expired']);
+
 // 1. Domains
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -630,6 +636,48 @@ export const researchSuggestions = pgTable('research_suggestions', {
   statusIdx: index('research_suggestions_status_idx').on(table.status),
 }));
 
+// Phase 6C Wave 2: Certification System Tables
+
+// 16. Certifications
+export const certifications = pgTable('certifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  entityType: certificationEntityTypeEnum('entity_type').notNull(),
+  entityId: uuid('entity_id').notNull(),
+  certificationType: certificationTypeEnum('certification_type').notNull(),
+  status: certificationStatusEnum('status').notNull().default('pending'),
+  certifiedBy: text('certified_by'),
+  certificationDate: timestamp('certification_date'),
+  expirationDate: timestamp('expiration_date'),
+  requirements: jsonb('requirements'),
+  evidence: jsonb('evidence'),
+  notes: text('notes'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  entityTypeIdx: index('certifications_entity_type_idx').on(table.entityType),
+  entityIdIdx: index('certifications_entity_id_idx').on(table.entityId),
+  statusIdx: index('certifications_status_idx').on(table.status),
+  certificationTypeIdx: index('certifications_type_idx').on(table.certificationType),
+}));
+
+// 17. Certification History (Audit Trail)
+export const certificationHistory = pgTable('certification_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  certificationId: uuid('certification_id').notNull().references(() => certifications.id, { onDelete: 'cascade' }),
+  action: certificationActionEnum('action').notNull(),
+  previousStatus: certificationStatusEnum('previous_status'),
+  newStatus: certificationStatusEnum('new_status'),
+  changedBy: text('changed_by'),
+  reason: text('reason'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  certificationIdIdx: index('cert_history_certification_id_idx').on(table.certificationId),
+  actionIdx: index('cert_history_action_idx').on(table.action),
+  createdAtIdx: index('cert_history_created_at_idx').on(table.createdAt),
+}));
+
 // Relations for new tables
 export const auditLogRelations = relations(auditLog, () => ({}));
 
@@ -649,5 +697,17 @@ export const researchSuggestionsRelations = relations(researchSuggestions, ({ on
   session: one(researchSessions, {
     fields: [researchSuggestions.sessionId],
     references: [researchSessions.id],
+  }),
+}));
+
+// Phase 6C Wave 2: Certification Relations
+export const certificationsRelations = relations(certifications, ({ many }) => ({
+  history: many(certificationHistory),
+}));
+
+export const certificationHistoryRelations = relations(certificationHistory, ({ one }) => ({
+  certification: one(certifications, {
+    fields: [certificationHistory.certificationId],
+    references: [certifications.id],
   }),
 }));
