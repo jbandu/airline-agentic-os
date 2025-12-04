@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { useCases, useCaseSteps } from '../db/schema';
+import { useCases, useCaseSteps, useCaseWorkflows, useCaseAgents, useCaseTools } from '../db/schema';
 import { eq, and, gte, lte, inArray } from 'drizzle-orm';
 
 const router = Router();
@@ -593,6 +593,208 @@ router.delete('/:useCaseId/steps/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting use case step:', error);
     res.status(500).json({ error: 'Failed to delete use case step' });
+  }
+});
+
+// Workflow Linking Routes
+// GET /api/use-cases/:id/workflows - Get all workflows linked to a use case
+router.get('/:id/workflows', async (req, res) => {
+  try {
+    const links = await db.query.useCaseWorkflows.findMany({
+      where: eq(useCaseWorkflows.useCaseId, req.params.id),
+      with: {
+        workflow: {
+          with: {
+            subdomain: true,
+          },
+        },
+      },
+    });
+
+    res.json(links);
+  } catch (error) {
+    console.error('Error fetching use case workflows:', error);
+    res.status(500).json({ error: 'Failed to fetch use case workflows' });
+  }
+});
+
+// POST /api/use-cases/:id/workflows - Link a workflow to a use case
+router.post('/:id/workflows', async (req, res) => {
+  try {
+    const { workflowId, coverage, coveragePercentage, notes } = req.body;
+
+    if (!workflowId) {
+      return res.status(400).json({ error: 'workflowId is required' });
+    }
+
+    const [newLink] = await db
+      .insert(useCaseWorkflows)
+      .values({
+        useCaseId: req.params.id,
+        workflowId,
+        coverage: coverage || 'partial',
+        coveragePercentage,
+        notes,
+      })
+      .returning();
+
+    res.status(201).json(newLink);
+  } catch (error) {
+    console.error('Error linking workflow to use case:', error);
+    res.status(500).json({ error: 'Failed to link workflow to use case' });
+  }
+});
+
+// DELETE /api/use-cases/:id/workflows/:workflowId - Unlink a workflow from a use case
+router.delete('/:id/workflows/:workflowId', async (req, res) => {
+  try {
+    await db
+      .delete(useCaseWorkflows)
+      .where(
+        and(
+          eq(useCaseWorkflows.useCaseId, req.params.id),
+          eq(useCaseWorkflows.workflowId, req.params.workflowId)
+        )
+      );
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error unlinking workflow from use case:', error);
+    res.status(500).json({ error: 'Failed to unlink workflow from use case' });
+  }
+});
+
+// Agent Linking Routes
+// GET /api/use-cases/:id/agents - Get all agents linked to a use case
+router.get('/:id/agents', async (req, res) => {
+  try {
+    const links = await db.query.useCaseAgents.findMany({
+      where: eq(useCaseAgents.useCaseId, req.params.id),
+      with: {
+        agent: {
+          with: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    res.json(links);
+  } catch (error) {
+    console.error('Error fetching use case agents:', error);
+    res.status(500).json({ error: 'Failed to fetch use case agents' });
+  }
+});
+
+// POST /api/use-cases/:id/agents - Link an agent to a use case
+router.post('/:id/agents', async (req, res) => {
+  try {
+    const { agentId, role, notes } = req.body;
+
+    if (!agentId) {
+      return res.status(400).json({ error: 'agentId is required' });
+    }
+
+    const [newLink] = await db
+      .insert(useCaseAgents)
+      .values({
+        useCaseId: req.params.id,
+        agentId,
+        role,
+        notes,
+      })
+      .returning();
+
+    res.status(201).json(newLink);
+  } catch (error) {
+    console.error('Error linking agent to use case:', error);
+    res.status(500).json({ error: 'Failed to link agent to use case' });
+  }
+});
+
+// DELETE /api/use-cases/:id/agents/:agentId - Unlink an agent from a use case
+router.delete('/:id/agents/:agentId', async (req, res) => {
+  try {
+    await db
+      .delete(useCaseAgents)
+      .where(
+        and(
+          eq(useCaseAgents.useCaseId, req.params.id),
+          eq(useCaseAgents.agentId, req.params.agentId)
+        )
+      );
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error unlinking agent from use case:', error);
+    res.status(500).json({ error: 'Failed to unlink agent from use case' });
+  }
+});
+
+// Tool Linking Routes
+// GET /api/use-cases/:id/tools - Get all tools linked to a use case
+router.get('/:id/tools', async (req, res) => {
+  try {
+    const links = await db.query.useCaseTools.findMany({
+      where: eq(useCaseTools.useCaseId, req.params.id),
+      with: {
+        tool: {
+          with: {
+            mcp: true,
+          },
+        },
+      },
+    });
+
+    res.json(links);
+  } catch (error) {
+    console.error('Error fetching use case tools:', error);
+    res.status(500).json({ error: 'Failed to fetch use case tools' });
+  }
+});
+
+// POST /api/use-cases/:id/tools - Link a tool to a use case
+router.post('/:id/tools', async (req, res) => {
+  try {
+    const { toolId, role, notes } = req.body;
+
+    if (!toolId) {
+      return res.status(400).json({ error: 'toolId is required' });
+    }
+
+    const [newLink] = await db
+      .insert(useCaseTools)
+      .values({
+        useCaseId: req.params.id,
+        toolId,
+        role,
+        notes,
+      })
+      .returning();
+
+    res.status(201).json(newLink);
+  } catch (error) {
+    console.error('Error linking tool to use case:', error);
+    res.status(500).json({ error: 'Failed to link tool to use case' });
+  }
+});
+
+// DELETE /api/use-cases/:id/tools/:toolId - Unlink a tool from a use case
+router.delete('/:id/tools/:toolId', async (req, res) => {
+  try {
+    await db
+      .delete(useCaseTools)
+      .where(
+        and(
+          eq(useCaseTools.useCaseId, req.params.id),
+          eq(useCaseTools.toolId, req.params.toolId)
+        )
+      );
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error unlinking tool from use case:', error);
+    res.status(500).json({ error: 'Failed to unlink tool from use case' });
   }
 });
 
