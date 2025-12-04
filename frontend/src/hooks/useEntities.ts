@@ -188,7 +188,7 @@ export function useBridges() {
     queryKey: ['bridges'],
     queryFn: async () => {
       const response = await api.getBridges();
-      return response || [];
+      return response.data || [];
     },
   });
 }

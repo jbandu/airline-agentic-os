@@ -76,7 +76,7 @@ class ApiClient {
 
   // Bridges
   async getBridges() {
-    return this.fetch<any[]>('/cross-domain/bridges');
+    return this.fetch<ApiResponse<any[]>>('/cross-domain/bridges');
   }
 
   async createDomain(data: CreateDomainInput) {
