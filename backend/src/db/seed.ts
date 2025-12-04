@@ -15,10 +15,53 @@ import {
   agentCollaborations,
   crossDomainBridges,
   mcpDependencies,
+  personas,
+  useCases,
+  useCaseSteps,
+  dayInLife,
+  researchSessions,
+  researchSuggestions,
+  auditLog,
 } from './schema';
+import { sql } from 'drizzle-orm';
+
+async function clearDatabase() {
+  console.log('🗑️  Clearing existing data...');
+
+  try {
+    // Delete in reverse dependency order
+    await db.delete(researchSuggestions);
+    await db.delete(researchSessions);
+    await db.delete(auditLog);
+    await db.delete(dayInLife);
+    await db.delete(useCaseSteps);
+    await db.delete(useCases);
+    await db.delete(personas);
+    await db.delete(mcpDependencies);
+    await db.delete(crossDomainBridges);
+    await db.delete(agentCollaborations);
+    await db.delete(workflowAgents);
+    await db.delete(workflowMcps);
+    await db.delete(workflows);
+    await db.delete(agents);
+    await db.delete(agentCategories);
+    await db.delete(tools);
+    await db.delete(mcps);
+    await db.delete(subdomains);
+    await db.delete(domains);
+
+    console.log('✓ Database cleared');
+  } catch (error) {
+    console.warn('Warning during database clear:', error);
+    // Continue anyway - some tables might not exist yet
+  }
+}
 
 async function seed() {
   console.log('Starting comprehensive airline operations seed...');
+
+  // Clear existing data to avoid conflicts
+  await clearDatabase();
 
   try {
     // 1. Seed 8 Domains
