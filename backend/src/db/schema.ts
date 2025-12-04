@@ -11,6 +11,15 @@ export const auditActionEnum = pgEnum('audit_action', ['create', 'update', 'dele
 export const researchTypeEnum = pgEnum('research_type', ['mcps', 'agents', 'workflows', 'tools', 'bridges', 'comprehensive']);
 export const suggestionStatusEnum = pgEnum('suggestion_status', ['pending', 'accepted', 'rejected', 'modified']);
 
+// Phase 6C: Persona & Use Case Enums
+export const useCaseFrequencyEnum = pgEnum('use_case_frequency', ['multiple_daily', 'daily', 'weekly', 'monthly', 'event_driven', 'seasonal']);
+export const useCaseTimePressureEnum = pgEnum('use_case_time_pressure', ['immediate', 'urgent', 'standard', 'flexible']);
+export const useCaseBusinessImpactEnum = pgEnum('use_case_business_impact', ['critical', 'high', 'medium', 'low']);
+export const useCaseCategoryEnum = pgEnum('use_case_category', ['operational', 'planning', 'compliance', 'communication', 'analysis', 'exception_handling']);
+export const useCaseStatusEnum = pgEnum('use_case_status', ['identified', 'analyzed', 'designing', 'building', 'testing', 'deployed', 'measuring']);
+export const useCaseStepActorEnum = pgEnum('use_case_step_actor', ['human', 'agent', 'system', 'human_with_agent']);
+export const useCaseStepActionTypeEnum = pgEnum('use_case_step_action_type', ['decision', 'data_entry', 'data_lookup', 'calculation', 'communication', 'validation', 'approval', 'notification']);
+
 // 1. Domains
 export const domains = pgTable('domains', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -35,6 +44,140 @@ export const subdomains = pgTable('subdomains', {
 }, (table) => ({
   domainIdIdx: index('subdomains_domain_id_idx').on(table.domainId),
   nameIdx: index('subdomains_name_idx').on(table.name),
+}));
+
+// 2A. Personas (Phase 6C) - Human roles in the system
+export const personas = pgTable('personas', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  subdomainId: uuid('subdomain_id').notNull().references(() => subdomains.id, { onDelete: 'cascade' }),
+  code: text('code').notNull(),
+  name: text('name').notNull(),
+  fullTitle: text('full_title'),
+  description: text('description'),
+  responsibilities: jsonb('responsibilities').$type<string[]>(),
+  typicalExperience: text('typical_experience'),
+  reportsTo: text('reports_to'),
+  teamSizeRange: text('team_size_range'),
+  shiftPatterns: jsonb('shift_patterns').$type<string[]>(),
+  systemsUsed: jsonb('systems_used').$type<string[]>(),
+  painPoints: jsonb('pain_points').$type<string[]>(),
+  goals: jsonb('goals').$type<string[]>(),
+  airlineTypes: jsonb('airline_types').$type<string[]>(),
+  icon: text('icon'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  subdomainIdIdx: index('personas_subdomain_id_idx').on(table.subdomainId),
+  codeIdx: index('personas_code_idx').on(table.code),
+  nameIdx: index('personas_name_idx').on(table.name),
+}));
+
+// 2B. Use Cases (Phase 6C) - Specific tasks a persona performs
+export const useCases = pgTable('use_cases', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  personaId: uuid('persona_id').notNull().references(() => personas.id, { onDelete: 'cascade' }),
+  code: text('code').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  detailedNarrative: text('detailed_narrative'),
+
+  // Timing & Frequency
+  frequency: useCaseFrequencyEnum('frequency').notNull().default('event_driven'),
+  typicalDurationMinutes: integer('typical_duration_minutes'),
+  timePressure: useCaseTimePressureEnum('time_pressure').notNull().default('standard'),
+  peakTimes: jsonb('peak_times').$type<string[]>(),
+
+  // Triggers & Context
+  triggers: jsonb('triggers').$type<string[]>(),
+  preconditions: jsonb('preconditions').$type<string[]>(),
+  postconditions: jsonb('postconditions').$type<string[]>(),
+
+  // Complexity & Value
+  complexity: integer('complexity').notNull().default(1), // 1-5
+  automationPotential: integer('automation_potential').notNull().default(1), // 1-5
+  currentPainLevel: integer('current_pain_level').notNull().default(1), // 1-5
+  businessImpact: useCaseBusinessImpactEnum('business_impact').notNull().default('medium'),
+
+  // ROI Calculations
+  estimatedAnnualOccurrences: integer('estimated_annual_occurrences'),
+  estimatedCostPerOccurrence: integer('estimated_cost_per_occurrence'), // in cents
+  estimatedAnnualValue: integer('estimated_annual_value'), // in cents
+
+  // Current State
+  currentProcess: text('current_process'),
+  currentToolsUsed: jsonb('current_tools_used').$type<string[]>(),
+  currentTimeMinutes: integer('current_time_minutes'),
+  currentSuccessRate: integer('current_success_rate'), // 0-100
+
+  // Future State
+  proposedProcess: text('proposed_process'),
+  proposedTimeMinutes: integer('proposed_time_minutes'),
+  proposedSuccessRate: integer('proposed_success_rate'), // 0-100
+
+  // Classification
+  category: useCaseCategoryEnum('category').notNull().default('operational'),
+  priority: integer('priority').notNull().default(3), // 1-5
+  implementationWave: integer('implementation_wave').notNull().default(1), // 1-3
+  status: useCaseStatusEnum('status').notNull().default('identified'),
+
+  relatedUseCases: jsonb('related_use_cases').$type<string[]>(), // other use case IDs
+  regulatoryReferences: jsonb('regulatory_references').$type<string[]>(),
+  kpis: jsonb('kpis'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  personaIdIdx: index('use_cases_persona_id_idx').on(table.personaId),
+  codeIdx: index('use_cases_code_idx').on(table.code),
+  statusIdx: index('use_cases_status_idx').on(table.status),
+  businessImpactIdx: index('use_cases_business_impact_idx').on(table.businessImpact),
+  implementationWaveIdx: index('use_cases_implementation_wave_idx').on(table.implementationWave),
+}));
+
+// 2C. Use Case Steps (Phase 6C) - Break down use case into discrete steps
+export const useCaseSteps = pgTable('use_case_steps', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  useCaseId: uuid('use_case_id').notNull().references(() => useCases.id, { onDelete: 'cascade' }),
+  stepNumber: integer('step_number').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  actor: useCaseStepActorEnum('actor').notNull().default('human'),
+  actionType: useCaseStepActionTypeEnum('action_type').notNull().default('data_entry'),
+  currentDurationSeconds: integer('current_duration_seconds'),
+  targetDurationSeconds: integer('target_duration_seconds'),
+  canAutomate: boolean('can_automate').notNull().default(false),
+  automationNotes: text('automation_notes'),
+  errorProne: boolean('error_prone').notNull().default(false),
+  errorNotes: text('error_notes'),
+  systemsInvolved: jsonb('systems_involved').$type<string[]>(),
+  dataNeeded: jsonb('data_needed').$type<string[]>(),
+  dataProduced: jsonb('data_produced').$type<string[]>(),
+  decisionCriteria: text('decision_criteria'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  useCaseIdIdx: index('use_case_steps_use_case_id_idx').on(table.useCaseId),
+  stepNumberIdx: index('use_case_steps_step_number_idx').on(table.stepNumber),
+}));
+
+// 2D. Day in Life (Phase 6C) - Document a typical shift for a persona
+export const dayInLife = pgTable('day_in_life', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  personaId: uuid('persona_id').notNull().references(() => personas.id, { onDelete: 'cascade' }),
+  shiftType: text('shift_type').notNull(),
+  narrative: text('narrative'),
+  startTime: text('start_time'), // stored as HH:MM
+  endTime: text('end_time'), // stored as HH:MM
+  totalHours: integer('total_hours'), // in decimal (e.g., 8 for 8 hours)
+  timeline: jsonb('timeline'), // array of timeline blocks
+  keyChallenges: jsonb('key_challenges').$type<string[]>(),
+  decisionPoints: jsonb('decision_points'),
+  metricsTracked: jsonb('metrics_tracked').$type<string[]>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  personaIdIdx: index('day_in_life_persona_id_idx').on(table.personaId),
 }));
 
 // 3. MCPs (Model Context Protocols)
@@ -195,11 +338,44 @@ export const subdomainsRelations = relations(subdomains, ({ one, many }) => ({
   }),
   mcps: many(mcps),
   workflows: many(workflows),
+  personas: many(personas), // Phase 6C
   sourceBridges: many(crossDomainBridges, {
     relationName: 'sourceBridges',
   }),
   targetBridges: many(crossDomainBridges, {
     relationName: 'targetBridges',
+  }),
+}));
+
+// Phase 6C Relations
+export const personasRelations = relations(personas, ({ one, many }) => ({
+  subdomain: one(subdomains, {
+    fields: [personas.subdomainId],
+    references: [subdomains.id],
+  }),
+  useCases: many(useCases),
+  dayInLife: many(dayInLife),
+}));
+
+export const useCasesRelations = relations(useCases, ({ one, many }) => ({
+  persona: one(personas, {
+    fields: [useCases.personaId],
+    references: [personas.id],
+  }),
+  steps: many(useCaseSteps),
+}));
+
+export const useCaseStepsRelations = relations(useCaseSteps, ({ one }) => ({
+  useCase: one(useCases, {
+    fields: [useCaseSteps.useCaseId],
+    references: [useCases.id],
+  }),
+}));
+
+export const dayInLifeRelations = relations(dayInLife, ({ one }) => ({
+  persona: one(personas, {
+    fields: [dayInLife.personaId],
+    references: [personas.id],
   }),
 }));
 
