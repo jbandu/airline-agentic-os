@@ -1,22 +1,57 @@
-interface GraphNode {
-  id: string;
-  type: string;
-  name: string;
-}
+import { SimpleForceGraph } from './SimpleForceGraph';
+import { useGraphData } from '../../hooks/useGraphData';
+import type { GraphNode } from '../../hooks/useGraphData';
 
 interface GraphContainerProps {
   onNodeClick?: (node: GraphNode) => void;
 }
 
-// TODO: Refactor to use React Query hooks instead of direct api.get() calls
 export function GraphContainer({ onNodeClick }: GraphContainerProps) {
-  // Suppress unused variable warning
-  void onNodeClick;
+  const { data, isLoading } = useGraphData();
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
+        <p className="text-gray-500">Loading graph data...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-8 text-center">
-      <p className="text-gray-500">Graph visualization temporarily disabled.</p>
-      <p className="text-sm text-gray-400 mt-2">Coming back soon with improved data fetching.</p>
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Ecosystem Graph</h3>
+        <p className="text-sm text-gray-500">
+          {data.nodes.length} nodes, {data.edges.length} connections
+        </p>
+      </div>
+      <SimpleForceGraph
+        nodes={data.nodes}
+        edges={data.edges}
+        onNodeClick={onNodeClick}
+      />
+      <div className="mt-4 flex gap-4 text-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+          <span>Domains</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-purple-500"></div>
+          <span>Subdomains</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-green-500"></div>
+          <span>MCPs (Built)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+          <span>MCPs (In Progress)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-gray-500"></div>
+          <span>MCPs (Planned)</span>
+        </div>
+      </div>
     </div>
   );
 }

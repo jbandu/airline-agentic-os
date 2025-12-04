@@ -65,6 +65,16 @@ class ApiClient {
     return this.fetch<ApiResponse<Domain>>(`/domains/${id}`);
   }
 
+  // Subdomains
+  async getSubdomains() {
+    return this.fetch<ApiResponse<any[]>>('/subdomains');
+  }
+
+  // Bridges
+  async getBridges() {
+    return this.fetch<any[]>('/cross-domain/bridges');
+  }
+
   async createDomain(data: CreateDomainInput) {
     return this.fetch<ApiResponse<Domain>>('/domains', {
       method: 'POST',

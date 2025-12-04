@@ -88,6 +88,20 @@ export function useDeleteDomain() {
 }
 
 // ============================================================================
+// SUBDOMAINS
+// ============================================================================
+
+export function useSubdomains() {
+  return useQuery({
+    queryKey: ['subdomains'],
+    queryFn: async () => {
+      const response = await api.getSubdomains();
+      return response.data || [];
+    },
+  });
+}
+
+// ============================================================================
 // MCPs
 // ============================================================================
 
@@ -161,6 +175,20 @@ export function useDeleteMCP() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete MCP');
+    },
+  });
+}
+
+// ============================================================================
+// CROSS-DOMAIN BRIDGES
+// ============================================================================
+
+export function useBridges() {
+  return useQuery({
+    queryKey: ['bridges'],
+    queryFn: async () => {
+      const response = await api.getBridges();
+      return response || [];
     },
   });
 }
